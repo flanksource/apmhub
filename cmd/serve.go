@@ -29,9 +29,15 @@ func runServe(cmd *cobra.Command, configFiles []string) {
 	if len(configFiles) != 0 {
 		for _, configFile := range configFiles {
 			logger.Debugf("loading backends from %s", configFile)
-			backends, err := pkg.ParseConfig(kommonsClient, configFile)
+			config, err := pkg.ParseConfig(configFile)
 			if err != nil {
 				logger.Errorf("error parsing the configFile: %v", err)
+				continue
+			}
+
+			backends, err := pkg.LoadBackendsFromConfig(kommonsClient, config)
+			if err != nil {
+				logger.Errorf("error loading backends from the configFile: %v", err)
 				continue
 			}
 

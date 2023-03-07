@@ -14,24 +14,31 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Initilize all the backends mentioned in the config
-// GlobalBackends, error
-func ParseConfig(kommonsClient *kommons.Client, configFile string) ([]logs.SearchBackend, error) {
-	searchConfig := &logs.SearchConfig{}
-	backends := []logs.SearchBackend{}
+// ParseConfig parses the config file and returns the SearchConfig
+func ParseConfig(configFile string) (*logs.SearchConfig, error) {
+	searchConfig := &logs.SearchConfig{
+		Path: configFile,
+	}
 	data, err := os.ReadFile(configFile)
 	if err != nil {
-		return nil, err
-	}
-	if err := yaml.Unmarshal(data, searchConfig); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading the configFile: %v", err)
 	}
 
+	if err := yaml.Unmarshal(data, searchConfig); err != nil {
+		return nil, fmt.Errorf("error unmarshalling the configFile: %v", err)
+	}
+
+	return searchConfig, nil
+}
+
+// LoadBackendsFromConfig loads the backends from the config file
+func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.SearchConfig) ([]logs.SearchBackend, error) {
+	var backends []logs.SearchBackend
 	for _, backend := range searchConfig.Backends {
 		if backend.Kubernetes != nil {
 			client, err := k8s.GetKubeClient(kommonsClient, backend.Kubernetes)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error getting the kube client: %w", err)
 			}
 			backend.Backend = &k8s.KubernetesSearch{
 				Client: client,
@@ -45,7 +52,7 @@ func ParseConfig(kommonsClient *kommons.Client, configFile string) ([]logs.Searc
 			for i, f := range backend.Files {
 				for j, p := range f.Paths {
 					if !filepath.IsAbs(p) {
-						backend.Files[i].Paths[j] = filepath.Join(filepath.Dir(configFile), p)
+						backend.Files[i].Paths[j] = filepath.Join(filepath.Dir(searchConfig.Path), p)
 					}
 				}
 			}

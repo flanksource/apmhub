@@ -12,6 +12,8 @@ import (
 var GlobalBackends []SearchBackend
 
 type SearchConfig struct {
+	// Path is the path of this config file
+	Path     string          `yaml:"-"`
 	Backends []SearchBackend `yaml:"backends,omitempty"`
 }
 
