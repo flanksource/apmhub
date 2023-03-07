@@ -2,6 +2,17 @@ backends:
   - kubernetes:
       kubeconfig:
   - elasticsearch:
-      address: "http://localhost:9200"
-      username: "admin"
-      password: "password"
+      # address: "http://localhost:9200"
+      username: "elastic"
+      password: "elastic"
+      cloudID: "apm:abcdefghijklmnopqrstuvwxyz"
+      apiKey: ""
+      index: "test"
+      query: '
+        {
+          "query": { 
+            "match": { 
+              "title": "{{.Title}}" 
+            }
+          }
+        }'

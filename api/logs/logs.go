@@ -45,8 +45,12 @@ type FileSearchBackend struct {
 
 type ElasticSearchBackend struct {
 	Address  string `yaml:"address,omitempty"`
+	CloudID  string `yaml:"cloudID,omitempty"`
+	APIKey   string `yaml:"apiKey,omitempty"`
 	Username string `yaml:"username,omitempty"`
 	Password string `yaml:"password,omitempty"`
+	Query    string `yaml:"query,omitempty"`
+	Index    string `yaml:"index,omitempty"`
 }
 
 type SearchParams struct {

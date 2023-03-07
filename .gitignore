@@ -5,3 +5,6 @@
 #Build
 .bin/
 .release
+
+# Hidden configs
+samples/.*yaml

@@ -64,20 +64,56 @@ func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.Se
 		}
 
 		if backend.ElasticSearch != nil {
-			cfg := v8.Config{
-				Addresses: []string{backend.ElasticSearch.Address},
-				Username:  backend.ElasticSearch.Username,
-				Password:  backend.ElasticSearch.Password,
+			cfg, err := getElasticConfig(backend.ElasticSearch)
+			if err != nil {
+				return nil, fmt.Errorf("error getting the elastic search config: %w", err)
 			}
-			client, err := v8.NewClient(cfg)
+
+			client, err := v8.NewClient(*cfg)
 			if err != nil {
 				return nil, fmt.Errorf("error creating the elastic search client: %w", err)
 			}
 
-			backend.Backend = elasticsearch.NewElasticSearchBackend(client)
+			pingResp, err := client.Ping()
+			if err != nil {
+				return nil, fmt.Errorf("error pinging the elastic search client: %w", err)
+			}
+
+			if pingResp.StatusCode != 200 {
+				return nil, fmt.Errorf("got ping response: %d", pingResp.StatusCode)
+			}
+
+			es, err := elasticsearch.NewElasticSearchBackend(client, backend.ElasticSearch.Index, backend.ElasticSearch.Query)
+			if err != nil {
+				return nil, fmt.Errorf("error creating the elastic search backend: %w", err)
+			}
+			backend.Backend = es
+
 			backends = append(backends, backend)
 		}
 	}
 
 	return backends, nil
+}
+
+func getElasticConfig(conf *logs.ElasticSearchBackend) (*v8.Config, error) {
+	if conf.Address != "" && conf.CloudID != "" {
+		return nil, fmt.Errorf("provide either an address or a cloudID")
+	}
+
+	cfg := v8.Config{
+		Username: conf.Username,
+		Password: conf.Password,
+	}
+
+	if conf.Address != "" {
+		cfg.Addresses = []string{conf.Address}
+	} else if conf.CloudID != "" {
+		cfg.CloudID = conf.CloudID
+		cfg.APIKey = conf.APIKey
+	} else {
+		return nil, fmt.Errorf("provide either an address or a cloudID")
+	}
+
+	return &cfg, nil
 }
