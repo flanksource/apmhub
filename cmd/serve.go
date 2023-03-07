@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -26,17 +25,21 @@ func runServe(cmd *cobra.Command, configFiles []string) {
 	if err != nil {
 		logger.Warnf("error getting the client from default k8s cluster: %v", err)
 	}
+
 	if len(configFiles) != 0 {
 		for _, configFile := range configFiles {
+			logger.Debugf("loading backends from %s", configFile)
 			backends, err := pkg.ParseConfig(kommonsClient, configFile)
 			if err != nil {
 				logger.Errorf("error parsing the configFile: %v", err)
 				continue
 			}
+
+			logger.Debugf("loaded %d backends from %s", len(backends), configFile)
 			logs.GlobalBackends = append(logs.GlobalBackends, backends...)
 		}
 	}
-	fmt.Println(logs.GlobalBackends)
+	logger.Infof("loaded %d backends", len(logs.GlobalBackends))
 
 	server := SetupServer(kommonsClient)
 	addr := "0.0.0.0:" + strconv.Itoa(httpPort)

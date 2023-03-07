@@ -1,3 +1,7 @@
 backends:
   - kubernetes:
       kubeconfig:
+  - elasticsearch:
+      address: "http://localhost:9200"
+      username: "admin"
+      password: "password"

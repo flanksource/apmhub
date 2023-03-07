@@ -1,10 +1,13 @@
 package pkg
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
+	v8 "github.com/elastic/go-elasticsearch/v8"
 	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
+	"github.com/flanksource/flanksource-ui/apm-hub/pkg/elasticsearch"
 	"github.com/flanksource/flanksource-ui/apm-hub/pkg/files"
 	k8s "github.com/flanksource/flanksource-ui/apm-hub/pkg/kubernetes"
 	"github.com/flanksource/kommons"
@@ -50,6 +53,21 @@ func ParseConfig(kommonsClient *kommons.Client, configFile string) ([]logs.Searc
 			backend.Backend = &files.FileSearch{
 				FilesBackend: backend.Files,
 			}
+			backends = append(backends, backend)
+		}
+
+		if backend.ElasticSearch != nil {
+			cfg := v8.Config{
+				Addresses: []string{backend.ElasticSearch.Address},
+				Username:  backend.ElasticSearch.Username,
+				Password:  backend.ElasticSearch.Password,
+			}
+			client, err := v8.NewClient(cfg)
+			if err != nil {
+				return nil, fmt.Errorf("error creating the elastic search client: %w", err)
+			}
+
+			backend.Backend = elasticsearch.NewElasticSearchBackend(client)
 			backends = append(backends, backend)
 		}
 	}

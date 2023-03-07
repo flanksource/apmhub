@@ -16,10 +16,11 @@ type SearchConfig struct {
 }
 
 type SearchBackend struct {
-	Routes     []SearchRoute            `json:"routes,omitempty"`
-	Backend    SearchAPI                `json:"-"`
-	Kubernetes *KubernetesSearchBackend `json:"kubernetes,omitempty"`
-	Files      []FileSearchBackend      `json:"file,omitempty" yaml:"file,omitempty"`
+	Routes        []SearchRoute            `json:"routes,omitempty"`
+	Backend       SearchAPI                `json:"-"`
+	ElasticSearch *ElasticSearchBackend    `json:"elasticsearch,omitempty"`
+	Kubernetes    *KubernetesSearchBackend `json:"kubernetes,omitempty"`
+	Files         []FileSearchBackend      `json:"file,omitempty" yaml:"file,omitempty"`
 }
 
 type SearchRoute struct {
@@ -38,6 +39,12 @@ type KubernetesSearchBackend struct {
 type FileSearchBackend struct {
 	Labels map[string]string `yaml:"labels,omitempty"`
 	Paths  []string          `yaml:"path,omitempty"`
+}
+
+type ElasticSearchBackend struct {
+	Address  string `yaml:"address,omitempty"`
+	Username string `yaml:"username,omitempty"`
+	Password string `yaml:"password,omitempty"`
 }
 
 type SearchParams struct {

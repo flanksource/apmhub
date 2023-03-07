@@ -15,6 +15,10 @@ IMG ?= docker.io/flanksource/apm-hub:${VERSION_TAG}
 build:
 	go build -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
+.PHONY: dev
+dev:
+	go build -o ./.bin/$(NAME) -gcflags="all=-N -l" -v main.go
+
 .PHONY: linux
 linux:
 	GOOS=linux GOARCH=amd64 go build -o ./.bin/$(NAME)_linux_amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
