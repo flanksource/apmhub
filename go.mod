@@ -1,12 +1,12 @@
 module github.com/flanksource/flanksource-ui/apm-hub
 
 require (
+	github.com/elastic/go-elasticsearch/v8 v8.6.0
 	github.com/flanksource/commons v1.5.10
 	github.com/flanksource/kommons v0.27.0
 	github.com/labstack/echo/v4 v4.6.3
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.1
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.20.4
 	k8s.io/apimachinery v0.20.4
@@ -36,7 +36,6 @@ require (
 	github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96 // indirect
 	github.com/dustin/gojson v0.0.0-20160307161227-2e71ec9dd5ad // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.0.0-20211216131617-bbee439d559c // indirect
-	github.com/elastic/go-elasticsearch/v8 v8.6.0 // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
@@ -101,13 +100,13 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pierrec/lz4 v2.3.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/src-d/gcfg v1.4.0 // indirect
+	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/ulikunitz/xz v0.5.5 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
@@ -164,4 +163,4 @@ replace (
 	k8s.io/client-go => k8s.io/client-go v0.20.4
 )
 
-go 1.17
+go 1.20
