@@ -3,6 +3,7 @@ package logs
 import (
 	"bufio"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -44,11 +45,23 @@ type FileSearchBackend struct {
 	Paths  []string          `yaml:"path,omitempty"`
 }
 
+// ElasticSearchFields defines the fields to use for the timestamp and message
+// and excluding certain fields from the message
+type ElasticSearchFields struct {
+	Timestamp  string   `yaml:"timestamp,omitempty"`  // Timestamp is the field used to extract the timestamp
+	Message    string   `yaml:"message,omitempty"`    // Message is the field used to extract the message
+	Labels     []string `yaml:"labels,omitempty"`     // Labels are the fields used to extract labels
+	Exclusions []string `yaml:"exclusions,omitempty"` // Exclusions contain regexp patterns to exclude from the message
+
+	ExclusionsRegexp []*regexp.Regexp `yaml:"-"` // ExclusionsRegexp is the compiled Exclusions
+}
+
 type ElasticSearchBackend struct {
-	Address   string `yaml:"address,omitempty"`
-	Query     string `yaml:"query,omitempty"`
-	Index     string `yaml:"index,omitempty"`
-	Namespace string `json:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
+	Address   string              `yaml:"address,omitempty"`
+	Query     string              `yaml:"query,omitempty"`
+	Index     string              `yaml:"index,omitempty"`
+	Namespace string              `json:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
+	Fields    ElasticSearchFields `yaml:"fields,omitempty"`
 
 	CloudID  *kommons.EnvVar `yaml:"cloudID,omitempty"`
 	APIKey   *kommons.EnvVar `yaml:"apiKey,omitempty"`
@@ -57,10 +70,11 @@ type ElasticSearchBackend struct {
 }
 
 type OpenSearchBackend struct {
-	Address   string `yaml:"address,omitempty"`
-	Query     string `yaml:"query,omitempty"`
-	Index     string `yaml:"index,omitempty"`
-	Namespace string `json:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
+	Address   string              `yaml:"address,omitempty"`
+	Query     string              `yaml:"query,omitempty"`
+	Index     string              `yaml:"index,omitempty"`
+	Namespace string              `yaml:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
+	Fields    ElasticSearchFields `yaml:"fields,omitempty"`
 
 	Username *kommons.EnvVar `yaml:"username,omitempty"`
 	Password *kommons.EnvVar `yaml:"password,omitempty"`

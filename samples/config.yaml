@@ -1,18 +1,3 @@
 backends:
   - kubernetes:
       kubeconfig:
-  - opensearch:
-      address: "http://localhost:9200"
-      index: "test"
-      username: 
-        value: "elastic"
-      password: 
-        value: "elastic"
-      query: '
-        {
-          "query": { 
-            "match": { 
-              "title": "{{.Title}}" 
-            }
-          }
-        }'

@@ -1,0 +1,24 @@
+backends:
+  - opensearch:
+      address: "https://logs.example.com"
+      namespace: "kube"
+      fields:
+        message: "message"
+        timestamp: "@timestamp"
+        labels:
+          - "log"
+        exclusions:
+          - "^referer: "
+          - "^cookie: "
+          - "^user-agent"
+      username: 
+        value: "elastic"
+      password:
+        value: "abcdefghijklmnopqrstuvwxyz"
+      index: "my-index-*"
+      query: '
+        {
+          "query": { 
+            "match_all" : {}
+          }
+        }'

@@ -114,7 +114,7 @@ func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.Se
 				return nil, fmt.Errorf("[opensearch] got ping response: %d", pingResp.StatusCode)
 			}
 
-			es, err := pkgOpensearch.NewOpenSearchBackend(client, backend.OpenSearch.Index, backend.OpenSearch.Query)
+			es, err := pkgOpensearch.NewOpenSearchBackend(client, backend.OpenSearch)
 			if err != nil {
 				return nil, fmt.Errorf("error creating the openSearch backend: %w", err)
 			}
