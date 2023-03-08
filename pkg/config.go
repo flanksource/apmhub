@@ -10,7 +10,9 @@ import (
 	"github.com/flanksource/flanksource-ui/apm-hub/pkg/elasticsearch"
 	"github.com/flanksource/flanksource-ui/apm-hub/pkg/files"
 	k8s "github.com/flanksource/flanksource-ui/apm-hub/pkg/kubernetes"
+	pkgOpensearch "github.com/flanksource/flanksource-ui/apm-hub/pkg/opensearch"
 	"github.com/flanksource/kommons"
+	"github.com/opensearch-project/opensearch-go/v2"
 	"gopkg.in/yaml.v3"
 )
 
@@ -80,7 +82,7 @@ func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.Se
 			}
 
 			if pingResp.StatusCode != 200 {
-				return nil, fmt.Errorf("got ping response: %d", pingResp.StatusCode)
+				return nil, fmt.Errorf("[elasticsearch] got ping response: %d", pingResp.StatusCode)
 			}
 
 			es, err := elasticsearch.NewElasticSearchBackend(client, backend.ElasticSearch.Index, backend.ElasticSearch.Query)
@@ -91,9 +93,58 @@ func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.Se
 
 			backends = append(backends, backend)
 		}
+
+		if backend.OpenSearch != nil {
+			cfg, err := getOpenSearchConfig(kommonsClient, backend.OpenSearch)
+			if err != nil {
+				return nil, fmt.Errorf("error getting the openSearch config: %w", err)
+			}
+
+			client, err := opensearch.NewClient(*cfg)
+			if err != nil {
+				return nil, fmt.Errorf("error creating the openSearch client: %w", err)
+			}
+
+			pingResp, err := client.Ping()
+			if err != nil {
+				return nil, fmt.Errorf("error pinging the openSearch client: %w", err)
+			}
+
+			if pingResp.StatusCode != 200 {
+				return nil, fmt.Errorf("[opensearch] got ping response: %d", pingResp.StatusCode)
+			}
+
+			es, err := pkgOpensearch.NewOpenSearchBackend(client, backend.OpenSearch.Index, backend.OpenSearch.Query)
+			if err != nil {
+				return nil, fmt.Errorf("error creating the openSearch backend: %w", err)
+			}
+			backend.Backend = es
+
+			backends = append(backends, backend)
+		}
 	}
 
 	return backends, nil
+}
+
+func getOpenSearchEnvVars(kClient *kommons.Client, conf *logs.OpenSearchBackend) (username, password string, err error) {
+	if conf.Username != nil {
+		_, username, err = kClient.GetEnvValue(*conf.Username, conf.Namespace)
+		if err != nil {
+			err = fmt.Errorf("error getting the username: %w", err)
+			return
+		}
+	}
+
+	if conf.Password != nil {
+		_, password, err = kClient.GetEnvValue(*conf.Password, conf.Namespace)
+		if err != nil {
+			err = fmt.Errorf("error getting the password: %w", err)
+			return
+		}
+	}
+
+	return
 }
 
 func getEnvVars(kClient *kommons.Client, conf *logs.ElasticSearchBackend) (cloudID, apiKey, username, password string, err error) {
@@ -154,6 +205,25 @@ func getElasticConfig(kClient *kommons.Client, conf *logs.ElasticSearchBackend) 
 		cfg.APIKey = apiKey
 	} else {
 		return nil, fmt.Errorf("provide either an address or a cloudID")
+	}
+
+	return &cfg, nil
+}
+
+func getOpenSearchConfig(kClient *kommons.Client, conf *logs.OpenSearchBackend) (*opensearch.Config, error) {
+	username, password, err := getOpenSearchEnvVars(kClient, conf)
+	if err != nil {
+		return nil, fmt.Errorf("error getting the env vars: %w", err)
+	}
+
+	if conf.Address == "" {
+		return nil, fmt.Errorf("address is required for OpenSearch")
+	}
+
+	cfg := opensearch.Config{
+		Username:  username,
+		Password:  password,
+		Addresses: []string{conf.Address},
 	}
 
 	return &cfg, nil

@@ -21,6 +21,7 @@ type SearchBackend struct {
 	Routes        []SearchRoute            `json:"routes,omitempty"`
 	Backend       SearchAPI                `json:"-"`
 	ElasticSearch *ElasticSearchBackend    `json:"elasticsearch,omitempty"`
+	OpenSearch    *OpenSearchBackend       `json:"opensearch,omitempty"`
 	Kubernetes    *KubernetesSearchBackend `json:"kubernetes,omitempty"`
 	Files         []FileSearchBackend      `json:"file,omitempty" yaml:"file,omitempty"`
 }
@@ -51,6 +52,16 @@ type ElasticSearchBackend struct {
 
 	CloudID  *kommons.EnvVar `yaml:"cloudID,omitempty"`
 	APIKey   *kommons.EnvVar `yaml:"apiKey,omitempty"`
+	Username *kommons.EnvVar `yaml:"username,omitempty"`
+	Password *kommons.EnvVar `yaml:"password,omitempty"`
+}
+
+type OpenSearchBackend struct {
+	Address   string `yaml:"address,omitempty"`
+	Query     string `yaml:"query,omitempty"`
+	Index     string `yaml:"index,omitempty"`
+	Namespace string `json:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
+
 	Username *kommons.EnvVar `yaml:"username,omitempty"`
 	Password *kommons.EnvVar `yaml:"password,omitempty"`
 }
