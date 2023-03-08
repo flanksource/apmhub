@@ -3,10 +3,14 @@ backends:
       kubeconfig:
   - elasticsearch:
       # address: "http://localhost:9200"
-      username: "elastic"
-      password: "elastic"
-      cloudID: "apm:abcdefghijklmnopqrstuvwxyz"
-      apiKey: ""
+      username: 
+        value: "elastic"
+      password: 
+        value: "elastic"
+      cloudID: 
+        value: "apm:abcdefghijklmnopqrstuvwxyz"
+      apiKey: 
+        value: ""
       index: "test"
       query: '
         {

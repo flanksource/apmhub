@@ -64,7 +64,7 @@ func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.Se
 		}
 
 		if backend.ElasticSearch != nil {
-			cfg, err := getElasticConfig(backend.ElasticSearch)
+			cfg, err := getElasticConfig(kommonsClient, backend.ElasticSearch)
 			if err != nil {
 				return nil, fmt.Errorf("error getting the elastic search config: %w", err)
 			}
@@ -96,21 +96,62 @@ func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.Se
 	return backends, nil
 }
 
-func getElasticConfig(conf *logs.ElasticSearchBackend) (*v8.Config, error) {
-	if conf.Address != "" && conf.CloudID != "" {
+func getEnvVars(kClient *kommons.Client, conf *logs.ElasticSearchBackend) (cloudID, apiKey, username, password string, err error) {
+	if conf.CloudID != nil {
+		_, cloudID, err = kClient.GetEnvValue(*conf.CloudID, conf.Namespace)
+		if err != nil {
+			err = fmt.Errorf("error getting the cloudID: %w", err)
+			return
+		}
+	}
+
+	if conf.Username != nil {
+		_, username, err = kClient.GetEnvValue(*conf.Username, conf.Namespace)
+		if err != nil {
+			err = fmt.Errorf("error getting the username: %w", err)
+			return
+		}
+	}
+
+	if conf.Password != nil {
+		_, password, err = kClient.GetEnvValue(*conf.Password, conf.Namespace)
+		if err != nil {
+			err = fmt.Errorf("error getting the password: %w", err)
+			return
+		}
+	}
+
+	if conf.APIKey != nil {
+		_, apiKey, err = kClient.GetEnvValue(*conf.APIKey, conf.Namespace)
+		if err != nil {
+			err = fmt.Errorf("error getting the apiKey: %w", err)
+			return
+		}
+	}
+
+	return
+}
+
+func getElasticConfig(kClient *kommons.Client, conf *logs.ElasticSearchBackend) (*v8.Config, error) {
+	cloudID, apiKey, username, password, err := getEnvVars(kClient, conf)
+	if err != nil {
+		return nil, fmt.Errorf("error getting the env vars: %w", err)
+	}
+
+	if conf.Address != "" && cloudID != "" {
 		return nil, fmt.Errorf("provide either an address or a cloudID")
 	}
 
 	cfg := v8.Config{
-		Username: conf.Username,
-		Password: conf.Password,
+		Username: username,
+		Password: password,
 	}
 
 	if conf.Address != "" {
 		cfg.Addresses = []string{conf.Address}
-	} else if conf.CloudID != "" {
-		cfg.CloudID = conf.CloudID
-		cfg.APIKey = conf.APIKey
+	} else if cloudID != "" {
+		cfg.CloudID = cloudID
+		cfg.APIKey = apiKey
 	} else {
 		return nil, fmt.Errorf("provide either an address or a cloudID")
 	}

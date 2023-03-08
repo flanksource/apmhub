@@ -44,13 +44,15 @@ type FileSearchBackend struct {
 }
 
 type ElasticSearchBackend struct {
-	Address  string `yaml:"address,omitempty"`
-	CloudID  string `yaml:"cloudID,omitempty"`
-	APIKey   string `yaml:"apiKey,omitempty"`
-	Username string `yaml:"username,omitempty"`
-	Password string `yaml:"password,omitempty"`
-	Query    string `yaml:"query,omitempty"`
-	Index    string `yaml:"index,omitempty"`
+	Address   string `yaml:"address,omitempty"`
+	Query     string `yaml:"query,omitempty"`
+	Index     string `yaml:"index,omitempty"`
+	Namespace string `json:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
+
+	CloudID  *kommons.EnvVar `yaml:"cloudID,omitempty"`
+	APIKey   *kommons.EnvVar `yaml:"apiKey,omitempty"`
+	Username *kommons.EnvVar `yaml:"username,omitempty"`
+	Password *kommons.EnvVar `yaml:"password,omitempty"`
 }
 
 type SearchParams struct {
