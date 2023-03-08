@@ -36,6 +36,7 @@ func NewElasticSearchBackend(client *elasticsearch.Client, index, tpl string) (*
 func (t *ElasticSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults, error) {
 	var result logs.SearchResults
 	var buf bytes.Buffer
+
 	if err := t.template.Execute(&buf, q.Labels); err != nil {
 		return result, fmt.Errorf("error executing template: %w", err)
 	}
@@ -66,9 +67,27 @@ func (t *ElasticSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults,
 	}
 
 	result.Results = getResultsFromHits(data)
-	result.Total = len(data)
-	result.NextPage = ""
+	result.Total = getTotalResultsCount(hits)
+	result.NextPage = getNextPage(hits)
 	return result, nil
+}
+
+func getNextPage(hits map[string]any) string {
+	return ""
+}
+
+func getTotalResultsCount(hits map[string]any) int {
+	total, ok := hits["total"].(map[string]interface{})
+	if !ok {
+		return 0
+	}
+
+	val, ok := total["value"].(float64)
+	if !ok {
+		return 0
+	}
+
+	return int(val)
 }
 
 func getResultsFromHits(data []any) []logs.Result {
@@ -86,9 +105,15 @@ func getResultsFromHits(data []any) []logs.Result {
 			source, _ = data["_source"].(map[string]any)
 		)
 
+		b, err := json.Marshal(source)
+		if err != nil {
+			logger.Errorf("error marshalling source: %v", err)
+			continue
+		}
+
 		resp = append(resp, logs.Result{
 			Id:      id,
-			Message: fmt.Sprintf("%v", source),
+			Message: string(b),
 			Labels: map[string]string{
 				"index": idx,
 			},
