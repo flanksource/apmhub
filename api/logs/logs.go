@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	durationUtil "github.com/flanksource/commons/duration"
 	"github.com/flanksource/kommons"
 )
 
@@ -157,12 +158,14 @@ func (p SearchParams) GetStart() *time.Time {
 	if p.start != nil {
 		return p.start
 	}
-	if duration, err := time.ParseDuration(p.Start); err == nil {
-		t := time.Now().Add(-duration)
+
+	if duration, err := durationUtil.ParseDuration(p.Start); err == nil {
+		t := time.Now().Add(-time.Duration(duration))
 		p.start = &t
 	} else if t, err := time.Parse(time.RFC3339, p.Start); err == nil {
 		p.start = &t
 	}
+
 	return p.start
 }
 
@@ -170,12 +173,14 @@ func (p SearchParams) GetEnd() *time.Time {
 	if p.end != nil {
 		return p.end
 	}
-	if duration, err := time.ParseDuration(p.End); err == nil {
-		t := time.Now().Add(-duration)
+
+	if duration, err := durationUtil.ParseDuration(p.End); err == nil {
+		t := time.Now().Add(-time.Duration(duration))
 		p.end = &t
 	} else if t, err := time.Parse(time.RFC3339, p.End); err == nil {
 		p.end = &t
 	}
+
 	return p.start
 }
 
