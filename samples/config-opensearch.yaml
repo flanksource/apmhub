@@ -7,25 +7,25 @@ backends:
         timestamp: "@timestamp"
         exclusions:
           - "log"
-      username: 
+      username:
         value: "elastic"
       password:
         value: "abcdefghijklmnopqrstuvwxyz"
       index: "my-index-*"
-      query: '
+      query: |
         {
-          "search_after": {{.Page}},
-          "sort": [
-            {
-              "@timestamp": {
-                "order": "desc",
-                "unmapped_type": "boolean"
-              }
-            }
-          ],
-          "query": { 
-            "match_phrase" : {
-              "transaction.client_ip": "{{index .Labels "clientIP"}}"
+          {{if .Page}}"search_after": {{ .Page }},{{end}}
+          "sort": [{ "@timestamp": { "order": "desc", "unmapped_type": "boolean" } }],
+          "query": {
+            "bool": {
+              "filter": [
+                {"match_phrase": {"transaction.client_ip": "{{index .Labels "clientIP"}}" }},
+                {"match_phrase": {"transaction.request.uri": "{{index .Labels "requestURI"}}" }}
+              ],
+              "must_not":[
+                {"match_phrase": { "agent.name": "nginx-ingress-controller-f6zx7" }},
+                {"match_phrase": { "agent.name": "nginx-ingress-controller-r46vg" }}
+              ]
             }
           }
-        }'
+        }
