@@ -100,11 +100,6 @@ type SearchParams struct {
 	// The identifier of the type of logs to find, e.g. k8s-node-1, k8s-service-1, k8s-pod-1, vm-1, etc.
 	// The ID should include include any cluster/namespace/account information required for routing
 	Id string `json:"id,omitempty"`
-
-	// Body is a generic map that's passed to the underlying search backends.
-	// It's used by opensearch backend to populate the query template.
-	Body map[string]any `json:"body,omitempty"`
-
 	// Limits the number of log messages return per item, e.g. pod
 	LimitPerItem int64 `json:"limitPerItem,omitempty"`
 	// Limits the number of bytes returned per item, e.g. pod

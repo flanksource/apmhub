@@ -18,7 +18,18 @@ backends:
       index: "my-index-*"
       query: '
         {
+          "size"
+          "sort": [
+            {
+              "@timestamp": {
+                "order": "desc",
+                "unmapped_type": "boolean"
+              }
+            }
+          ],
           "query": { 
-            "match_all" : {}
+            "match_phrase" : {
+              "transaction.client_ip": "{{index .Labels "clientIP"}}"
+            }
           }
         }'
