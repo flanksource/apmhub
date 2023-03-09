@@ -57,7 +57,7 @@ func (t *OpenSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults, er
 	var result logs.SearchResults
 	var buf bytes.Buffer
 
-	if err := t.template.Execute(&buf, q.Labels); err != nil {
+	if err := t.template.Execute(&buf, q.Body); err != nil {
 		return result, fmt.Errorf("error executing template: %w", err)
 	}
 	logger.Debugf("Query: %s", string(buf.Bytes()))
@@ -66,67 +66,44 @@ func (t *OpenSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults, er
 		t.client.Search.WithContext(context.Background()),
 		t.client.Search.WithIndex(t.index),
 		t.client.Search.WithBody(&buf),
+		t.client.Search.WithSize(int(q.Limit)),
+		t.client.Search.WithErrorTrace(),
 	)
 	if err != nil {
 		return result, fmt.Errorf("error searching: %w", err)
 	}
 	defer res.Body.Close()
 
-	var r map[string]any
+	var r OpenSearchResponse
 	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
 		return result, fmt.Errorf("error parsing the response body: %w", err)
 	}
 
-	hits, ok := r["hits"].(map[string]any)
-	if !ok {
-		return result, nil
-	}
-
-	data, ok := hits["hits"].([]any)
-	if !ok {
-		return result, nil
-	}
-
-	result.Results = t.getResultsFromHits(data)
-	result.Total = getTotalResultsCount(hits)
-	result.NextPage = getNextPage(hits)
+	result.Results = t.getResultsFromHits(r.Hits.Hits)
+	result.Total = int(r.Hits.Total.Value)
+	result.NextPage = getNextPage(r.Hits.Hits)
 	return result, nil
 }
 
-func getNextPage(hits map[string]any) string {
-	return ""
-}
-
-func getTotalResultsCount(hits map[string]any) int {
-	total, ok := hits["total"].(map[string]interface{})
-	if !ok {
-		return 0
+func getNextPage(rows []ElasticsearchHit) string {
+	if len(rows) == 0 {
+		return ""
 	}
 
-	val, ok := total["value"].(float64)
-	if !ok {
-		return 0
+	lastItem := rows[len(rows)-1]
+	val, err := stringify(lastItem.Sort)
+	if err != nil {
+		logger.Errorf("error stringifying sort: %v", err)
+		return ""
 	}
 
-	return int(val)
+	return val
 }
 
-func (t *OpenSearchBackend) getResultsFromHits(data []any) []logs.Result {
-	resp := make([]logs.Result, 0, len(data))
-	for _, v := range data {
-		data, ok := v.(map[string]any)
-		if !ok {
-			logger.Debugf("invalid data type [%T]: %v", v, v)
-			continue
-		}
-
-		var (
-			id, _        = data["_id"].(string)
-			source, _    = data["_source"].(map[string]any)
-			timestamp, _ = source[t.fields.Timestamp].(string)
-		)
-
-		msgField, ok := source[t.fields.Message]
+func (t *OpenSearchBackend) getResultsFromHits(rows []ElasticsearchHit) []logs.Result {
+	resp := make([]logs.Result, 0, len(rows))
+	for _, row := range rows {
+		msgField, ok := row.Source[t.fields.Message]
 		if !ok {
 			logger.Debugf("message field [%s] not found", t.fields.Message)
 			continue
@@ -143,11 +120,12 @@ func (t *OpenSearchBackend) getResultsFromHits(data []any) []logs.Result {
 			continue
 		}
 
+		var timestamp, _ = row.Source[t.fields.Timestamp].(string)
 		resp = append(resp, logs.Result{
-			Id:      id,
+			Id:      row.ID,
 			Message: msg,
 			Time:    timestamp,
-			Labels:  extractLabelsFromSource(source, t.fields.Labels),
+			Labels:  extractLabelsFromSource(row.Source, t.fields.Labels),
 		})
 	}
 
@@ -158,12 +136,13 @@ func extractLabelsFromSource(src map[string]any, fields []string) map[string]str
 	source := make(map[string]string)
 	for k, v := range src {
 		if collections.Contains(fields, k) {
-			b, err := json.Marshal(v)
+			b, err := stringify(v)
 			if err != nil {
+				logger.Errorf("failed to stringify field %s: %v", k, err)
 				continue
 			}
 
-			source[k] = string(b)
+			source[k] = b
 		}
 	}
 
