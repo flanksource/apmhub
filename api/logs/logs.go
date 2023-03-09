@@ -169,6 +169,7 @@ type SearchResults struct {
 func (r *SearchResults) Append(other *SearchResults) {
 	r.Results = append(r.Results, other.Results...)
 	r.Total += other.Total
+	r.NextPage = other.NextPage
 }
 
 type Result struct {
