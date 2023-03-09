@@ -105,6 +105,15 @@ type SearchParams struct {
 	end   *time.Time `json:"-"`
 }
 
+func (p SearchParams) GetStartISO() string {
+	start := p.GetStart()
+	if start == nil {
+		return ""
+	}
+
+	return start.UTC().Format("2006-01-02T15:04:05.000Z")
+}
+
 func (p SearchParams) GetStart() *time.Time {
 	if p.start != nil {
 		return p.start

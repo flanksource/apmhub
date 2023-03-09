@@ -20,7 +20,8 @@ backends:
             "bool": {
               "filter": [
                 {"match_phrase": {"transaction.client_ip": "{{index .Labels "clientIP"}}" }},
-                {"match_phrase": {"transaction.request.uri": "{{index .Labels "requestURI"}}" }}
+                {"match_phrase": {"transaction.request.uri": "{{index .Labels "requestURI"}}" }},
+                {"range": {"@timestamp": {"gte": "{{.GetStartISO}}", "lte": "2023-03-09T12:29:11.828Z", "format": "strict_date_optional_time"}}}
               ],
               "must_not":[
                 {"match_phrase": { "agent.name": "nginx-ingress-controller-f6zx7" }},
