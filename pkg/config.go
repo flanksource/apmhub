@@ -21,6 +21,7 @@ func ParseConfig(configFile string) (*logs.SearchConfig, error) {
 	searchConfig := &logs.SearchConfig{
 		Path: configFile,
 	}
+
 	data, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, fmt.Errorf("error reading the configFile: %v", err)

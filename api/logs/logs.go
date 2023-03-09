@@ -27,9 +27,28 @@ type SearchBackend struct {
 }
 
 type SearchRoute struct {
-	Type     string            `json:"type,omitempty"`
-	IdPrefix string            `json:"idPrefix,omitempty"`
-	Labels   map[string]string `json:"labels,omitempty"`
+	Type       string            `yaml:"type,omitempty"`
+	IdPrefix   string            `yaml:"idPrefix,omitempty"`
+	Labels     map[string]string `yaml:"labels,omitempty"`
+	IsAdditive bool              `yaml:"additive,omitempty"`
+}
+
+func (t *SearchRoute) Match(q *SearchParams) bool {
+	if t.Type != "" && t.Type != q.Type {
+		return false
+	}
+
+	if t.IdPrefix != "" && !strings.HasPrefix(q.Id, t.IdPrefix) {
+		return false
+	}
+
+	for k, v := range t.Labels {
+		if q.Labels[k] != v {
+			return false
+		}
+	}
+
+	return true
 }
 
 type KubernetesSearchBackend struct {
@@ -103,6 +122,26 @@ type SearchParams struct {
 
 	start *time.Time `json:"-"`
 	end   *time.Time `json:"-"`
+}
+
+// SetDefaults sets the default values for the search params
+// if they are not set
+func (t *SearchParams) SetDefaults() {
+	if t.Start == "" {
+		t.Start = "1h"
+	}
+
+	if t.LimitPerItem == 0 {
+		t.LimitPerItem = 100
+	}
+
+	if t.Limit <= 0 {
+		t.Limit = 50
+	}
+
+	if t.LimitBytesPerItem == 0 {
+		t.LimitBytesPerItem = 100 * 1024
+	}
 }
 
 func (p SearchParams) GetStartISO() string {

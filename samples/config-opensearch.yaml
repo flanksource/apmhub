@@ -1,5 +1,15 @@
 backends:
-  - opensearch:
+  - routes:
+      - type: "elastic"
+        labels:
+          foo: bar
+        idPrefix: "elastic"
+        additive: true
+      - type: "opensearch"
+        idPrefix: "opensearch"
+        labels:
+          foo: bar
+    opensearch:
       address: "https://logs.example.com"
       namespace: "kube"
       fields:

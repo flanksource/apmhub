@@ -19,28 +19,44 @@ func Search(c echo.Context) error {
 	if err != nil {
 		cc.Error(err)
 	}
-	if searchParams.Start == "" {
-		searchParams.Start = "1h"
-	}
-	if searchParams.LimitPerItem == 0 {
-		searchParams.LimitPerItem = 100
-	}
-	if searchParams.Limit <= 0 {
-		searchParams.Limit = 50
-	}
-	if searchParams.LimitBytesPerItem == 0 {
-		searchParams.LimitBytesPerItem = 100 * 1024
-	}
+	searchParams.SetDefaults()
+
 	timer := timer.NewTimer()
 	results := &logs.SearchResults{}
-	for _, backend := range logs.GlobalBackends {
+	for i, backend := range logs.GlobalBackends {
+		matched, isAdditive := validateRoute(searchParams, backend.Routes)
+		if !matched {
+			continue
+		}
+
 		searchResult, err := backend.Backend.Search(searchParams)
 		if err != nil {
-			logger.Errorf("error executing error: %v", err)
+			logger.Errorf("error searching backend[%d]: %v", i, err)
 			continue
 		}
 		results.Append(&searchResult)
+
+		// If the route is additive, all the previous search results are discarded
+		// and just the search result from this backend is returned exclusively.
+		if isAdditive {
+			logger.Infof("additive route matched. discarding previous results and exiting early")
+			results := &logs.SearchResults{}
+			results.Append(&searchResult)
+			break
+		}
 	}
+
 	logger.Infof("[%s] => %d results in %s", searchParams, results.Total, timer)
+
 	return cc.JSON(http.StatusOK, *results)
+}
+
+func validateRoute(q *logs.SearchParams, routes []logs.SearchRoute) (match bool, isAdditive bool) {
+	for _, route := range routes {
+		if route.Match(q) {
+			return true, route.IsAdditive
+		}
+	}
+
+	return false, false
 }
