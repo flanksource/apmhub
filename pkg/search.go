@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Search and collate logs 
+// Search and collate logs
 func Search(c echo.Context) error {
 	cc := c.(*api.Context)
 	searchParams := new(logs.SearchParams)
@@ -24,6 +24,9 @@ func Search(c echo.Context) error {
 	}
 	if searchParams.LimitPerItem == 0 {
 		searchParams.LimitPerItem = 100
+	}
+	if searchParams.Limit <= 0 {
+		searchParams.Limit = 50
 	}
 	if searchParams.LimitBytesPerItem == 0 {
 		searchParams.LimitBytesPerItem = 100 * 1024
