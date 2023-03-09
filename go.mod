@@ -4,6 +4,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.6.0
 	github.com/flanksource/commons v1.5.10
 	github.com/flanksource/kommons v0.27.0
+	github.com/jeremywohl/flatten v1.0.1
 	github.com/labstack/echo/v4 v4.6.3
 	github.com/opensearch-project/opensearch-go/v2 v2.2.0
 	github.com/spf13/cobra v1.1.1

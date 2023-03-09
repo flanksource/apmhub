@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
+	"github.com/jeremywohl/flatten"
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 )
 
@@ -115,36 +116,51 @@ func (t *OpenSearchBackend) getResultsFromHits(requestedRowsCount int64, rows []
 			continue
 		}
 
+		labels, err := t.extractLabelsFromSource(row.Source, t.fields.Exclusions)
+		if err != nil {
+			logger.Errorf("error extracting labels: %v", err)
+		}
+
 		var timestamp, _ = row.Source[t.fields.Timestamp].(string)
 		resp = append(resp, logs.Result{
 			Id:      row.ID,
 			Message: msg,
 			Time:    timestamp,
-			Labels:  t.extractLabelsFromSource(row.Source, t.fields.Exclusions),
+			Labels:  labels,
 		})
 	}
 
 	return resp
 }
 
-func (t *OpenSearchBackend) extractLabelsFromSource(src map[string]any, fields []string) map[string]string {
-	source := make(map[string]string)
+func (t *OpenSearchBackend) extractLabelsFromSource(src map[string]any, fields []string) (map[string]string, error) {
+	sourceAfterExclusion := make(map[string]any)
 	for k, v := range src {
 		// Exclude message field, timestamp field and fields that are explicitly excluded
 		if k == t.fields.Message || k == t.fields.Timestamp || collections.Contains(fields, k) {
 			continue
 		}
 
-		b, err := stringify(v)
+		sourceAfterExclusion[k] = v
+	}
+
+	flattenedLabels, err := flatten.Flatten(sourceAfterExclusion, "", flatten.DotStyle)
+	if err != nil {
+		return nil, fmt.Errorf("error flattening source: %w", err)
+	}
+
+	stringedLabels := make(map[string]string, len(flattenedLabels))
+	for k, v := range flattenedLabels {
+		str, err := stringify(v)
 		if err != nil {
-			logger.Errorf("failed to stringify field %s: %v", k, err)
+			logger.Errorf("error stringifying %v: %v", v, err)
 			continue
 		}
 
-		source[k] = b
+		stringedLabels[k] = str
 	}
 
-	return source
+	return stringedLabels, nil
 }
 
 func stringify(val any) (string, error) {
