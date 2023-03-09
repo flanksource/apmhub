@@ -3,7 +3,6 @@ package logs
 import (
 	"bufio"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -50,10 +49,7 @@ type FileSearchBackend struct {
 type ElasticSearchFields struct {
 	Timestamp  string   `yaml:"timestamp,omitempty"`  // Timestamp is the field used to extract the timestamp
 	Message    string   `yaml:"message,omitempty"`    // Message is the field used to extract the message
-	Labels     []string `yaml:"labels,omitempty"`     // Labels are the fields used to extract labels
-	Exclusions []string `yaml:"exclusions,omitempty"` // Exclusions contain regexp patterns to exclude from the message
-
-	ExclusionsRegexp []*regexp.Regexp `yaml:"-"` // ExclusionsRegexp is the compiled Exclusions
+	Exclusions []string `yaml:"exclusions,omitempty"` // Exclusions are the fields that'll be extracted from the labels
 }
 
 type ElasticSearchBackend struct {

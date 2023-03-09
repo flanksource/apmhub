@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"text/template"
 
 	"github.com/flanksource/commons/collections"
@@ -33,16 +32,6 @@ func NewOpenSearchBackend(client *opensearch.Client, config *logs.OpenSearchBack
 	template, err := template.New("query").Parse(config.Query)
 	if err != nil {
 		return nil, err
-	}
-
-	config.Fields.ExclusionsRegexp = make([]*regexp.Regexp, len(config.Fields.Exclusions))
-	for i, k := range config.Fields.Exclusions {
-		regexp, err := regexp.Compile(k)
-		if err != nil {
-			return nil, fmt.Errorf("error compiling the regexp [%s]: %w", k, err)
-		}
-
-		config.Fields.ExclusionsRegexp[i] = regexp
 	}
 
 	return &OpenSearchBackend{
@@ -115,35 +104,33 @@ func (t *OpenSearchBackend) getResultsFromHits(rows []ElasticsearchHit) []logs.R
 			continue
 		}
 
-		if shouldExclude(msg, t.fields.ExclusionsRegexp) {
-			logger.Debugf("message excluded: %s", msg)
-			continue
-		}
-
 		var timestamp, _ = row.Source[t.fields.Timestamp].(string)
 		resp = append(resp, logs.Result{
 			Id:      row.ID,
 			Message: msg,
 			Time:    timestamp,
-			Labels:  extractLabelsFromSource(row.Source, t.fields.Labels),
+			Labels:  t.extractLabelsFromSource(row.Source, t.fields.Exclusions),
 		})
 	}
 
 	return resp
 }
 
-func extractLabelsFromSource(src map[string]any, fields []string) map[string]string {
+func (t *OpenSearchBackend) extractLabelsFromSource(src map[string]any, fields []string) map[string]string {
 	source := make(map[string]string)
 	for k, v := range src {
-		if collections.Contains(fields, k) {
-			b, err := stringify(v)
-			if err != nil {
-				logger.Errorf("failed to stringify field %s: %v", k, err)
-				continue
-			}
-
-			source[k] = b
+		// Exclude message field, timestamp field and fields that are explicitly excluded
+		if k == t.fields.Message || k == t.fields.Timestamp || collections.Contains(fields, k) {
+			continue
 		}
+
+		b, err := stringify(v)
+		if err != nil {
+			logger.Errorf("failed to stringify field %s: %v", k, err)
+			continue
+		}
+
+		source[k] = b
 	}
 
 	return source
@@ -160,14 +147,4 @@ func stringify(val any) (string, error) {
 		}
 		return string(b), nil
 	}
-}
-
-func shouldExclude(msg string, exclusions []*regexp.Regexp) bool {
-	for _, r := range exclusions {
-		if r.MatchString(msg) {
-			return true
-		}
-	}
-
-	return false
 }

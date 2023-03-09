@@ -5,12 +5,8 @@ backends:
       fields:
         message: "message"
         timestamp: "@timestamp"
-        labels:
-          - "log"
         exclusions:
-          - "^referer: "
-          - "^cookie: "
-          - "^user-agent"
+          - "log"
       username: 
         value: "elastic"
       password:
@@ -18,7 +14,6 @@ backends:
       index: "my-index-*"
       query: '
         {
-          "size"
           "sort": [
             {
               "@timestamp": {
