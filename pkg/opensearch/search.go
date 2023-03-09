@@ -55,7 +55,7 @@ func (t *OpenSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults, er
 		t.client.Search.WithContext(context.Background()),
 		t.client.Search.WithIndex(t.index),
 		t.client.Search.WithBody(&buf),
-		t.client.Search.WithSize(int(q.Limit)),
+		t.client.Search.WithSize(int(q.Limit+1)),
 		t.client.Search.WithErrorTrace(),
 	)
 	if err != nil {
@@ -68,18 +68,25 @@ func (t *OpenSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults, er
 		return result, fmt.Errorf("error parsing the response body: %w", err)
 	}
 
-	result.Results = t.getResultsFromHits(r.Hits.Hits)
+	result.Results = t.getResultsFromHits(q.Limit, r.Hits.Hits)
 	result.Total = int(r.Hits.Total.Value)
-	result.NextPage = getNextPage(r.Hits.Hits)
+	result.NextPage = getNextPage(int(q.Limit), r.Hits.Hits)
 	return result, nil
 }
 
-func getNextPage(rows []ElasticsearchHit) string {
+func getNextPage(requestedRowsCount int, rows []ElasticsearchHit) string {
 	if len(rows) == 0 {
 		return ""
 	}
 
-	lastItem := rows[len(rows)-1]
+	// If we got less than the requested rows count, we are at the end of the results.
+	// Note: We always request one more than the requested rows count, so we can
+	// determine if there are more results to fetch.
+	if requestedRowsCount >= len(rows) {
+		return ""
+	}
+
+	lastItem := rows[len(rows)-2]
 	val, err := stringify(lastItem.Sort)
 	if err != nil {
 		logger.Errorf("error stringifying sort: %v", err)
@@ -89,7 +96,11 @@ func getNextPage(rows []ElasticsearchHit) string {
 	return val
 }
 
-func (t *OpenSearchBackend) getResultsFromHits(rows []ElasticsearchHit) []logs.Result {
+func (t *OpenSearchBackend) getResultsFromHits(requestedRowsCount int64, rows []ElasticsearchHit) []logs.Result {
+	if len(rows) > int(requestedRowsCount) {
+		rows = rows[:requestedRowsCount]
+	}
+
 	resp := make([]logs.Result, 0, len(rows))
 	for _, row := range rows {
 		msgField, ok := row.Source[t.fields.Message]
