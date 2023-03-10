@@ -10,8 +10,8 @@ import (
 
 var (
 	version = "dev"
-	commit  = "none"
-	date    = "unknown"
+	commit  = "none"    //nolint:staticcheck,unused
+	date    = "unknown" //nolint:staticcheck,unused
 )
 
 func main() {

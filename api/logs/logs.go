@@ -154,7 +154,7 @@ func (p SearchParams) GetStartISO() string {
 	return start.UTC().Format("2006-01-02T15:04:05.000Z")
 }
 
-func (p SearchParams) GetStart() *time.Time {
+func (p *SearchParams) GetStart() *time.Time {
 	if p.start != nil {
 		return p.start
 	}
@@ -169,7 +169,7 @@ func (p SearchParams) GetStart() *time.Time {
 	return p.start
 }
 
-func (p SearchParams) GetEnd() *time.Time {
+func (p *SearchParams) GetEnd() *time.Time {
 	if p.end != nil {
 		return p.end
 	}

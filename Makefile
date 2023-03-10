@@ -51,6 +51,10 @@ release: binaries
 test:
 	go test ./... -count=1 -v
 
+.PHONY: lint
+lint:
+	golangci-lint run
+
 .PHONY: integration
 integration:
 	go test --tags=integration ./... -count=1 -v

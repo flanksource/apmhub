@@ -49,7 +49,7 @@ func (t *OpenSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults, er
 	if err := t.template.Execute(&buf, q); err != nil {
 		return result, fmt.Errorf("error executing template: %w", err)
 	}
-	logger.Debugf("Query: %s", string(buf.Bytes()))
+	logger.Debugf("Query: %s", buf.String())
 
 	res, err := t.client.Search(
 		t.client.Search.WithContext(context.Background()),

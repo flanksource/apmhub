@@ -199,7 +199,7 @@ func (c *Client) GetLogsForPod(q *logs.SearchParams, pod v1.Pod) (map[string][]l
 		}
 		start := q.GetStart()
 		if start != nil {
-			options.SinceTime = &metav1.Time{*start}
+			options.SinceTime = &metav1.Time{Time: *start}
 		}
 
 		podLogs, err := pods.GetLogs(pod.Name, options).Do(context.TODO()).Raw()
