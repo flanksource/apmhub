@@ -181,7 +181,7 @@ func (p *SearchParams) GetEnd() *time.Time {
 		p.end = &t
 	}
 
-	return p.start
+	return p.end
 }
 
 func (q SearchParams) String() string {
