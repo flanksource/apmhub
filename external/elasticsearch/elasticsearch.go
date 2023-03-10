@@ -1,6 +1,7 @@
-package opensearch
+package elasticsearch
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/flanksource/commons/collections"
@@ -15,18 +16,18 @@ type TotalHitsInfo struct {
 }
 
 type HitsInfo struct {
-	Total    TotalHitsInfo      `json:"total"`
-	MaxScore float64            `json:"max_score"`
-	Hits     []ElasticsearchHit `json:"hits"`
+	Total    TotalHitsInfo `json:"total"`
+	MaxScore float64       `json:"max_score"`
+	Hits     []SearchHit   `json:"hits"`
 }
 
-type OpenSearchResponse struct {
+type SearchResponse struct {
 	Took     float64 `json:"took"`
 	TimedOut bool    `json:"timed_out"`
 	Hits     HitsInfo
 }
 
-type ElasticsearchHit struct {
+type SearchHit struct {
 	Index  string         `json:"_index"`
 	Type   string         `json:"_type"`
 	ID     string         `json:"_id"`
@@ -127,4 +128,19 @@ func extractLabelsFromSource(src map[string]any, msgField, timestampField string
 	}
 
 	return stringedLabels, nil
+}
+
+// stringify converts the given value to a string.
+// If the value is already a string, it is returned as is.
+func stringify(val any) (string, error) {
+	switch v := val.(type) {
+	case string:
+		return v, nil
+	default:
+		b, err := json.Marshal(v)
+		if err != nil {
+			return "", err
+		}
+		return string(b), nil
+	}
 }

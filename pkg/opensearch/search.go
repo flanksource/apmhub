@@ -9,6 +9,7 @@ import (
 
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
+	"github.com/flanksource/flanksource-ui/apm-hub/external/elasticsearch"
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 )
 
@@ -62,7 +63,7 @@ func (t *OpenSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults, er
 	}
 	defer res.Body.Close()
 
-	var r OpenSearchResponse
+	var r elasticsearch.SearchResponse
 	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
 		return result, fmt.Errorf("error parsing the response body: %w", err)
 	}
@@ -71,19 +72,4 @@ func (t *OpenSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults, er
 	result.Total = int(r.Hits.Total.Value)
 	result.NextPage = r.Hits.NextPage(int(q.Limit))
 	return result, nil
-}
-
-// stringify converts the given value to a string.
-// If the value is already a string, it is returned as is.
-func stringify(val any) (string, error) {
-	switch v := val.(type) {
-	case string:
-		return v, nil
-	default:
-		b, err := json.Marshal(v)
-		if err != nil {
-			return "", err
-		}
-		return string(b), nil
-	}
 }
