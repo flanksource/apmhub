@@ -31,7 +31,7 @@ func NewOpenSearchBackend(client *opensearch.Client, config *logs.OpenSearchBack
 
 	template, err := template.New("query").Parse(config.Query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing template: %w", err)
 	}
 
 	return &OpenSearchBackend{

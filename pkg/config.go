@@ -86,7 +86,7 @@ func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.Se
 				return nil, fmt.Errorf("[elasticsearch] got ping response: %d", pingResp.StatusCode)
 			}
 
-			es, err := elasticsearch.NewElasticSearchBackend(client, backend.ElasticSearch.Index, backend.ElasticSearch.Query)
+			es, err := elasticsearch.NewElasticSearchBackend(client, backend.ElasticSearch)
 			if err != nil {
 				return nil, fmt.Errorf("error creating the elastic search backend: %w", err)
 			}
