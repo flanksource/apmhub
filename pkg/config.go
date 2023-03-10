@@ -148,7 +148,7 @@ func getOpenSearchEnvVars(kClient *kommons.Client, conf *logs.OpenSearchBackend)
 	return
 }
 
-func getEnvVars(kClient *kommons.Client, conf *logs.ElasticSearchBackend) (cloudID, apiKey, username, password string, err error) {
+func getElasticSearchEnvVars(kClient *kommons.Client, conf *logs.ElasticSearchBackend) (cloudID, apiKey, username, password string, err error) {
 	if conf.CloudID != nil {
 		_, cloudID, err = kClient.GetEnvValue(*conf.CloudID, conf.Namespace)
 		if err != nil {
@@ -185,7 +185,7 @@ func getEnvVars(kClient *kommons.Client, conf *logs.ElasticSearchBackend) (cloud
 }
 
 func getElasticConfig(kClient *kommons.Client, conf *logs.ElasticSearchBackend) (*v8.Config, error) {
-	cloudID, apiKey, username, password, err := getEnvVars(kClient, conf)
+	cloudID, apiKey, username, password, err := getElasticSearchEnvVars(kClient, conf)
 	if err != nil {
 		return nil, fmt.Errorf("error getting the env vars: %w", err)
 	}
@@ -205,7 +205,7 @@ func getElasticConfig(kClient *kommons.Client, conf *logs.ElasticSearchBackend) 
 		cfg.CloudID = cloudID
 		cfg.APIKey = apiKey
 	} else {
-		return nil, fmt.Errorf("provide either an address or a cloudID")
+		return nil, fmt.Errorf("provide at least an address or a cloudID")
 	}
 
 	return &cfg, nil

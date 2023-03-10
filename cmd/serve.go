@@ -28,13 +28,14 @@ func runServe(cmd *cobra.Command, configFiles []string) {
 
 	if len(configFiles) != 0 {
 		for _, configFile := range configFiles {
-			logger.Debugf("loading backends from %s", configFile)
+			logger.Debugf("parsing config file: %s", configFile)
 			config, err := pkg.ParseConfig(configFile)
 			if err != nil {
 				logger.Errorf("error parsing the configFile: %v", err)
 				continue
 			}
 
+			logger.Debugf("loading backends from config file: %s", configFile)
 			backends, err := pkg.LoadBackendsFromConfig(kommonsClient, config)
 			if err != nil {
 				logger.Errorf("error loading backends from the configFile: %v", err)
@@ -45,7 +46,7 @@ func runServe(cmd *cobra.Command, configFiles []string) {
 			logs.GlobalBackends = append(logs.GlobalBackends, backends...)
 		}
 	}
-	logger.Infof("loaded %d backends", len(logs.GlobalBackends))
+	logger.Infof("loaded %d backends in total", len(logs.GlobalBackends))
 
 	server := SetupServer(kommonsClient)
 	addr := "0.0.0.0:" + strconv.Itoa(httpPort)
