@@ -44,7 +44,13 @@ func (t *SearchRoute) Match(q *SearchParams) bool {
 	}
 
 	for k, v := range t.Labels {
-		if q.Labels[k] != v {
+		qVal, ok := q.Labels[k]
+		if !ok {
+			return false
+		}
+
+		configuredLabels := strings.Split(v, ",")
+		if !matchItems(qVal, configuredLabels...) {
 			return false
 		}
 	}
@@ -254,4 +260,31 @@ type SearchAPI interface {
 
 type SearchMapper interface {
 	MapSearchParams(p *SearchParams) ([]SearchParams, error)
+}
+
+// matchItems returns true if any of the items in the list match the item
+// negative matches are supported by prefixing the item with a !
+// * matches everything
+func matchItems(item string, items ...string) bool {
+	if len(items) == 0 {
+		return true
+	}
+
+	for _, i := range items {
+		if strings.HasPrefix(i, "!") {
+			if item == strings.TrimPrefix(i, "!") {
+				return false
+			}
+		}
+	}
+
+	for _, i := range items {
+		if strings.HasPrefix(i, "!") {
+			continue
+		}
+		if i == "*" || item == i {
+			return true
+		}
+	}
+	return false
 }

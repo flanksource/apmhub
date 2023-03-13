@@ -2,13 +2,13 @@ backends:
   - routes:
       - type: "elastic"
         labels:
-          foo: bar
+          app: "frontend,backend"
         idPrefix: "elastic"
         additive: true
       - type: "opensearch"
         idPrefix: "opensearch"
         labels:
-          foo: bar
+          app: "!backend"
     opensearch:
       address: "https://logs.example.com"
       namespace: "kube"
