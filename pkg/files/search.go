@@ -12,13 +12,13 @@ import (
 )
 
 type FileSearch struct {
-	FilesBackend []logs.FileSearchBackend
+	FilesBackendConfig []logs.FileSearchBackendConfig
 }
 
 func (t *FileSearch) Search(q *logs.SearchParams) (r logs.SearchResults, err error) {
 	var res logs.SearchResults
 
-	for _, b := range t.FilesBackend {
+	for _, b := range t.FilesBackendConfig {
 		if !matchQueryLabels(q.Labels, b.Labels) {
 			continue
 		}
@@ -30,6 +30,17 @@ func (t *FileSearch) Search(q *logs.SearchParams) (r logs.SearchResults, err err
 	}
 
 	return res, nil
+}
+
+func (t *FileSearch) MatchRoute(q *logs.SearchParams) (match bool, isAdditive bool) {
+	for _, k := range t.FilesBackendConfig {
+		match, isAdditive := k.Routes.MatchRoute(q)
+		if match {
+			return match, isAdditive
+		}
+	}
+
+	return false, false
 }
 
 type logsPerFile map[string][]logs.Result

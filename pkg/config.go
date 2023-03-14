@@ -43,8 +43,10 @@ func LoadBackendsFromConfig(client *kommons.Client, searchConfig *logs.SearchCon
 			if err != nil {
 				return nil, fmt.Errorf("error getting the kube client: %w", err)
 			}
+
 			backend.Backend = &k8s.KubernetesSearch{
 				Client: client,
+				Routes: backend.Kubernetes.Routes,
 			}
 			backends = append(backends, backend)
 		}
@@ -61,7 +63,7 @@ func LoadBackendsFromConfig(client *kommons.Client, searchConfig *logs.SearchCon
 			}
 
 			backend.Backend = &files.FileSearch{
-				FilesBackend: backend.Files,
+				FilesBackendConfig: backend.Files,
 			}
 			backends = append(backends, backend)
 		}
@@ -128,7 +130,7 @@ func LoadBackendsFromConfig(client *kommons.Client, searchConfig *logs.SearchCon
 	return backends, nil
 }
 
-func getOpenSearchEnvVars(client *kommons.Client, conf *logs.OpenSearchBackend) (username, password string, err error) {
+func getOpenSearchEnvVars(client *kommons.Client, conf *logs.OpenSearchBackendConfig) (username, password string, err error) {
 	if conf.Username != nil {
 		_, username, err = client.GetEnvValue(*conf.Username, conf.Namespace)
 		if err != nil {
@@ -148,7 +150,7 @@ func getOpenSearchEnvVars(client *kommons.Client, conf *logs.OpenSearchBackend) 
 	return
 }
 
-func getElasticSearchEnvVars(kClient *kommons.Client, conf *logs.ElasticSearchBackend) (cloudID, apiKey, username, password string, err error) {
+func getElasticSearchEnvVars(kClient *kommons.Client, conf *logs.ElasticSearchBackendConfig) (cloudID, apiKey, username, password string, err error) {
 	if conf.CloudID != nil {
 		_, cloudID, err = kClient.GetEnvValue(*conf.CloudID, conf.Namespace)
 		if err != nil {
@@ -184,7 +186,7 @@ func getElasticSearchEnvVars(kClient *kommons.Client, conf *logs.ElasticSearchBa
 	return
 }
 
-func getElasticConfig(kClient *kommons.Client, conf *logs.ElasticSearchBackend) (*v8.Config, error) {
+func getElasticConfig(kClient *kommons.Client, conf *logs.ElasticSearchBackendConfig) (*v8.Config, error) {
 	cloudID, apiKey, username, password, err := getElasticSearchEnvVars(kClient, conf)
 	if err != nil {
 		return nil, fmt.Errorf("error getting the env vars: %w", err)
@@ -211,7 +213,7 @@ func getElasticConfig(kClient *kommons.Client, conf *logs.ElasticSearchBackend) 
 	return &cfg, nil
 }
 
-func getOpenSearchConfig(kClient *kommons.Client, conf *logs.OpenSearchBackend) (*opensearch.Config, error) {
+func getOpenSearchConfig(kClient *kommons.Client, conf *logs.OpenSearchBackendConfig) (*opensearch.Config, error) {
 	username, password, err := getOpenSearchEnvVars(kClient, conf)
 	if err != nil {
 		return nil, fmt.Errorf("error getting the env vars: %w", err)

@@ -24,7 +24,7 @@ func Search(c echo.Context) error {
 	timer := timer.NewTimer()
 	results := &logs.SearchResults{}
 	for i, backend := range logs.GlobalBackends {
-		matched, isAdditive := matchRoutes(searchParams, backend.Routes)
+		matched, isAdditive := backend.Backend.MatchRoute(searchParams)
 		if !matched {
 			logger.Debugf("backend[%d] did not match any routes", i)
 			continue
@@ -50,14 +50,4 @@ func Search(c echo.Context) error {
 	logger.Infof("[%s] => %d results in %s", searchParams, results.Total, timer)
 
 	return cc.JSON(http.StatusOK, *results)
-}
-
-func matchRoutes(q *logs.SearchParams, routes []logs.SearchRoute) (match bool, isAdditive bool) {
-	for _, route := range routes {
-		if route.Match(q) {
-			return true, route.IsAdditive
-		}
-	}
-
-	return false, false
 }

@@ -18,9 +18,10 @@ type OpenSearchBackend struct {
 	fields   logs.ElasticSearchFields
 	template *template.Template
 	index    string
+	routes   logs.Routes
 }
 
-func NewOpenSearchBackend(client *opensearch.Client, config *logs.OpenSearchBackend) (*OpenSearchBackend, error) {
+func NewOpenSearchBackend(client *opensearch.Client, config *logs.OpenSearchBackendConfig) (*OpenSearchBackend, error) {
 	if client == nil {
 		return nil, fmt.Errorf("client is nil")
 	}
@@ -39,7 +40,12 @@ func NewOpenSearchBackend(client *opensearch.Client, config *logs.OpenSearchBack
 		client:   client,
 		index:    config.Index,
 		template: template,
+		routes:   config.Routes,
 	}, nil
+}
+
+func (t *OpenSearchBackend) MatchRoute(q *logs.SearchParams) (match bool, isAdditive bool) {
+	return t.routes.MatchRoute(q)
 }
 
 func (t *OpenSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults, error) {

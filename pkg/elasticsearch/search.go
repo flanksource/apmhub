@@ -17,9 +17,10 @@ type ElasticSearchBackend struct {
 	fields   logs.ElasticSearchFields
 	template *template.Template
 	index    string
+	routes   logs.Routes
 }
 
-func NewElasticSearchBackend(client *elasticsearch.Client, config *logs.ElasticSearchBackend) (*ElasticSearchBackend, error) {
+func NewElasticSearchBackend(client *elasticsearch.Client, config *logs.ElasticSearchBackendConfig) (*ElasticSearchBackend, error) {
 	if client == nil {
 		return nil, fmt.Errorf("client is nil")
 	}
@@ -38,7 +39,12 @@ func NewElasticSearchBackend(client *elasticsearch.Client, config *logs.ElasticS
 		index:    config.Index,
 		fields:   config.Fields,
 		template: template,
+		routes:   config.Routes,
 	}, nil
+}
+
+func (t *ElasticSearchBackend) MatchRoute(q *logs.SearchParams) (match bool, isAdditive bool) {
+	return t.routes.MatchRoute(q)
 }
 
 func (t *ElasticSearchBackend) Search(q *logs.SearchParams) (logs.SearchResults, error) {

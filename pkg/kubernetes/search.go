@@ -11,6 +11,7 @@ import (
 
 type KubernetesSearch struct {
 	Client *Client
+	Routes logs.Routes
 }
 
 func podNames(list *v1.PodList) []string {
@@ -20,6 +21,11 @@ func podNames(list *v1.PodList) []string {
 	}
 	return names
 }
+
+func (t *KubernetesSearch) MatchRoute(q *logs.SearchParams) (match bool, isAdditive bool) {
+	return t.Routes.MatchRoute(q)
+}
+
 func (s *KubernetesSearch) Search(q *logs.SearchParams) (r logs.SearchResults, err error) {
 	var pods *v1.PodList
 	var resultLabels map[string]string

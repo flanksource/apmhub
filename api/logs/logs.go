@@ -20,12 +20,27 @@ type SearchConfig struct {
 }
 
 type SearchBackend struct {
-	Routes        []SearchRoute            `json:"routes,omitempty"`
-	Backend       SearchAPI                `json:"-"`
-	ElasticSearch *ElasticSearchBackend    `json:"elasticsearch,omitempty"`
-	OpenSearch    *OpenSearchBackend       `json:"opensearch,omitempty"`
-	Kubernetes    *KubernetesSearchBackend `json:"kubernetes,omitempty"`
-	Files         []FileSearchBackend      `json:"file,omitempty" yaml:"file,omitempty"`
+	Backend       SearchAPI                   `json:"-"`
+	ElasticSearch *ElasticSearchBackendConfig `json:"elasticsearch,omitempty"`
+	OpenSearch    *OpenSearchBackendConfig    `json:"opensearch,omitempty"`
+	Kubernetes    *KubernetesSearchBackend    `json:"kubernetes,omitempty"`
+	Files         []FileSearchBackendConfig   `json:"file,omitempty" yaml:"file,omitempty"`
+}
+
+type Routes []SearchRoute
+
+func (t Routes) MatchRoute(q *SearchParams) (match bool, isAdditive bool) {
+	for _, route := range t {
+		if route.Match(q) {
+			return true, route.IsAdditive
+		}
+	}
+
+	return false, false
+}
+
+type CommonBackend struct {
+	Routes Routes `json:"routes,omitempty"`
 }
 
 type SearchRoute struct {
@@ -60,15 +75,17 @@ func (t *SearchRoute) Match(q *SearchParams) bool {
 }
 
 type KubernetesSearchBackend struct {
+	CommonBackend `json:",inline" yaml:",inline"`
 	// empty kubeconfig indicates to use the current kubeconfig for connection
 	Kubeconfig *kommons.EnvVar `json:"kubeconfig,omitempty"`
 	//namespace to search the kommons.EnvVar in
 	Namespace string `json:"namespace,omitempty"`
 }
 
-type FileSearchBackend struct {
-	Labels map[string]string `yaml:"labels,omitempty"`
-	Paths  []string          `yaml:"path,omitempty"`
+type FileSearchBackendConfig struct {
+	CommonBackend `json:",inline" yaml:",inline"`
+	Labels        map[string]string `yaml:"labels,omitempty"`
+	Paths         []string          `yaml:"path,omitempty"`
 }
 
 // ElasticSearchFields defines the fields to use for the timestamp and message
@@ -79,12 +96,13 @@ type ElasticSearchFields struct {
 	Exclusions []string `yaml:"exclusions,omitempty"` // Exclusions are the fields that'll be extracted from the labels
 }
 
-type ElasticSearchBackend struct {
-	Address   string              `yaml:"address,omitempty"`
-	Query     string              `yaml:"query,omitempty"`
-	Index     string              `yaml:"index,omitempty"`
-	Namespace string              `json:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
-	Fields    ElasticSearchFields `yaml:"fields,omitempty"`
+type ElasticSearchBackendConfig struct {
+	CommonBackend `json:",inline" yaml:",inline"`
+	Address       string              `yaml:"address,omitempty"`
+	Query         string              `yaml:"query,omitempty"`
+	Index         string              `yaml:"index,omitempty"`
+	Namespace     string              `json:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
+	Fields        ElasticSearchFields `yaml:"fields,omitempty"`
 
 	CloudID  *kommons.EnvVar `yaml:"cloudID,omitempty"`
 	APIKey   *kommons.EnvVar `yaml:"apiKey,omitempty"`
@@ -92,12 +110,13 @@ type ElasticSearchBackend struct {
 	Password *kommons.EnvVar `yaml:"password,omitempty"`
 }
 
-type OpenSearchBackend struct {
-	Address   string              `yaml:"address,omitempty"`
-	Query     string              `yaml:"query,omitempty"`
-	Index     string              `yaml:"index,omitempty"`
-	Namespace string              `yaml:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
-	Fields    ElasticSearchFields `yaml:"fields,omitempty"`
+type OpenSearchBackendConfig struct {
+	CommonBackend `json:",inline" yaml:",inline"`
+	Address       string              `yaml:"address,omitempty"`
+	Query         string              `yaml:"query,omitempty"`
+	Index         string              `yaml:"index,omitempty"`
+	Namespace     string              `yaml:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
+	Fields        ElasticSearchFields `yaml:"fields,omitempty"`
 
 	Username *kommons.EnvVar `yaml:"username,omitempty"`
 	Password *kommons.EnvVar `yaml:"password,omitempty"`
@@ -257,6 +276,7 @@ func (r Result) Process() Result {
 
 type SearchAPI interface {
 	Search(q *SearchParams) (r SearchResults, err error)
+	MatchRoute(q *SearchParams) (match bool, isAdditive bool)
 }
 
 type SearchMapper interface {
