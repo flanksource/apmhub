@@ -35,11 +35,11 @@ func ParseConfig(configFile string) (*logs.SearchConfig, error) {
 }
 
 // LoadBackendsFromConfig loads the backends from the config file
-func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.SearchConfig) ([]logs.SearchBackend, error) {
+func LoadBackendsFromConfig(client *kommons.Client, searchConfig *logs.SearchConfig) ([]logs.SearchBackend, error) {
 	var backends []logs.SearchBackend
 	for _, backend := range searchConfig.Backends {
 		if backend.Kubernetes != nil {
-			client, err := k8s.GetKubeClient(kommonsClient, backend.Kubernetes)
+			client, err := k8s.GetKubeClient(client, backend.Kubernetes)
 			if err != nil {
 				return nil, fmt.Errorf("error getting the kube client: %w", err)
 			}
@@ -67,7 +67,7 @@ func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.Se
 		}
 
 		if backend.ElasticSearch != nil {
-			cfg, err := getElasticConfig(kommonsClient, backend.ElasticSearch)
+			cfg, err := getElasticConfig(client, backend.ElasticSearch)
 			if err != nil {
 				return nil, fmt.Errorf("error getting the elastic search config: %w", err)
 			}
@@ -96,7 +96,7 @@ func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.Se
 		}
 
 		if backend.OpenSearch != nil {
-			cfg, err := getOpenSearchConfig(kommonsClient, backend.OpenSearch)
+			cfg, err := getOpenSearchConfig(client, backend.OpenSearch)
 			if err != nil {
 				return nil, fmt.Errorf("error getting the openSearch config: %w", err)
 			}
@@ -128,9 +128,9 @@ func LoadBackendsFromConfig(kommonsClient *kommons.Client, searchConfig *logs.Se
 	return backends, nil
 }
 
-func getOpenSearchEnvVars(kClient *kommons.Client, conf *logs.OpenSearchBackend) (username, password string, err error) {
+func getOpenSearchEnvVars(client *kommons.Client, conf *logs.OpenSearchBackend) (username, password string, err error) {
 	if conf.Username != nil {
-		_, username, err = kClient.GetEnvValue(*conf.Username, conf.Namespace)
+		_, username, err = client.GetEnvValue(*conf.Username, conf.Namespace)
 		if err != nil {
 			err = fmt.Errorf("error getting the username: %w", err)
 			return
@@ -138,7 +138,7 @@ func getOpenSearchEnvVars(kClient *kommons.Client, conf *logs.OpenSearchBackend)
 	}
 
 	if conf.Password != nil {
-		_, password, err = kClient.GetEnvValue(*conf.Password, conf.Namespace)
+		_, password, err = client.GetEnvValue(*conf.Password, conf.Namespace)
 		if err != nil {
 			err = fmt.Errorf("error getting the password: %w", err)
 			return
