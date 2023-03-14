@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/commons/collections"
 	durationUtil "github.com/flanksource/commons/duration"
 	"github.com/flanksource/kommons"
 )
@@ -50,7 +51,7 @@ func (t *SearchRoute) Match(q *SearchParams) bool {
 		}
 
 		configuredLabels := strings.Split(v, ",")
-		if !matchItems(qVal, configuredLabels...) {
+		if !collections.MatchItems(qVal, configuredLabels...) {
 			return false
 		}
 	}
@@ -260,31 +261,4 @@ type SearchAPI interface {
 
 type SearchMapper interface {
 	MapSearchParams(p *SearchParams) ([]SearchParams, error)
-}
-
-// matchItems returns true if any of the items in the list match the item
-// negative matches are supported by prefixing the item with a !
-// * matches everything
-func matchItems(item string, items ...string) bool {
-	if len(items) == 0 {
-		return true
-	}
-
-	for _, i := range items {
-		if strings.HasPrefix(i, "!") {
-			if item == strings.TrimPrefix(i, "!") {
-				return false
-			}
-		}
-	}
-
-	for _, i := range items {
-		if strings.HasPrefix(i, "!") {
-			continue
-		}
-		if i == "*" || item == i {
-			return true
-		}
-	}
-	return false
 }

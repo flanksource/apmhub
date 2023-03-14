@@ -1,11 +1,11 @@
 package elasticsearch
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/commons/utils"
 	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
 	"github.com/jeremywohl/flatten"
 )
@@ -50,7 +50,7 @@ func (t *HitsInfo) NextPage(requestedRowsCount int) string {
 	}
 
 	lastItem := t.Hits[len(t.Hits)-2]
-	val, err := stringify(lastItem.Sort)
+	val, err := utils.Stringify(lastItem.Sort)
 	if err != nil {
 		logger.Errorf("error stringifying sort: %v", err)
 		return ""
@@ -75,7 +75,7 @@ func (t *HitsInfo) GetResultsFromHits(requestedRowsCount int64, msgField, timest
 			continue
 		}
 
-		msg, err := stringify(msgVal)
+		msg, err := utils.Stringify(msgVal)
 		if err != nil {
 			logger.Debugf("error stringifying message: %v", err)
 			continue
@@ -118,7 +118,7 @@ func extractLabelsFromSource(src map[string]any, msgField, timestampField string
 
 	stringedLabels := make(map[string]string, len(flattenedLabels))
 	for k, v := range flattenedLabels {
-		str, err := stringify(v)
+		str, err := utils.Stringify(v)
 		if err != nil {
 			logger.Errorf("error stringifying %v: %v", v, err)
 			continue
@@ -128,19 +128,4 @@ func extractLabelsFromSource(src map[string]any, msgField, timestampField string
 	}
 
 	return stringedLabels, nil
-}
-
-// stringify converts the given value to a string.
-// If the value is already a string, it is returned as is.
-func stringify(val any) (string, error) {
-	switch v := val.(type) {
-	case string:
-		return v, nil
-	default:
-		b, err := json.Marshal(v)
-		if err != nil {
-			return "", err
-		}
-		return string(b), nil
-	}
 }
