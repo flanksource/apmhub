@@ -19,39 +19,83 @@ package controllers
 import (
 	"context"
 
+	logsAPI "github.com/flanksource/apm-hub/api/logs"
+	"github.com/flanksource/apm-hub/pkg"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	apmhubv1 "github.com/flanksource/apm-hub/api/v1"
+	"github.com/flanksource/apm-hub/utils"
+	"github.com/go-logr/logr"
 )
 
 // APMHubConfigReconciler reconciles a APMHubConfig object
 type APMHubConfigReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	Log    logr.Logger
 }
 
-//+kubebuilder:rbac:groups=apmhub.flanksource.com,resources=apmhubconfigs,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=apmhub.flanksource.com,resources=apmhubconfigs/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=apmhub.flanksource.com,resources=apmhubconfigs/finalizers,verbs=update
+const APMHUBConfigFinalizerName = "config.apm-hub.flanksource.com"
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the APMHubConfig object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.1/pkg/reconcile
+// +kubebuilder:rbac:groups=apm-hub.flanksource.com,resources=apmhubconfigs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apm-hub.flanksource.com,resources=apmhubconfigs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apm-hub.flanksource.com,resources=apmhubconfigs/finalizers,verbs=update
 func (r *APMHubConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := r.Log.WithValues("apmhub_config", req.NamespacedName)
 
-	// TODO(user): your logic here
+	config := &apmhubv1.APMHubConfig{}
+	err := r.Get(ctx, req.NamespacedName, config)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			logger.Error(err, "APMHUBConfig not found")
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, err
+	}
 
+	// Check if it is deleted, remove config
+	if !config.DeletionTimestamp.IsZero() {
+		logger.Info("Deleting config", "id", config.GetUID())
+		removeBackendFromGlobalBackends(config.Spec.Backends)
+		controllerutil.RemoveFinalizer(config, APMHUBConfigFinalizerName)
+		return ctrl.Result{}, r.Update(ctx, config)
+	}
+
+	// Add finalizer
+	if !controllerutil.ContainsFinalizer(config, APMHUBConfigFinalizerName) {
+		logger.Info("adding finalizer", "finalizers", config.GetFinalizers())
+		controllerutil.AddFinalizer(config, APMHUBConfigFinalizerName)
+		if err := r.Update(ctx, config); err != nil {
+			logger.Error(err, "failed to update finalizers")
+		}
+	}
+
+	for _, b := range config.Spec.Backends {
+		sb := b.ToSearchBackend()
+		if err := pkg.AttachSearchAPIToBackend(&sb); err != nil {
+			logger.Error(err, "error adding search api to backend")
+			continue
+		}
+		logsAPI.GlobalBackends = append(logsAPI.GlobalBackends, sb)
+	}
 	return ctrl.Result{}, nil
+}
+
+func removeBackendFromGlobalBackends(backends []logsAPI.SearchBackendCRD) {
+	for i, gb := range logsAPI.GlobalBackends {
+		for _, b := range backends {
+			hashA, _ := utils.Hash(gb)
+			hashB, _ := utils.Hash(b)
+			if hashA == hashB {
+				logsAPI.GlobalBackends = append(logsAPI.GlobalBackends[:i], logsAPI.GlobalBackends[i+1:]...)
+				continue
+			}
+		}
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
