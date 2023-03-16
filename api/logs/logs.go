@@ -19,6 +19,14 @@ type SearchConfig struct {
 	Backends []SearchBackend `yaml:"backends,omitempty"`
 }
 
+// +kubebuilder:object:generate=true
+type SearchBackendCRD struct {
+	ElasticSearch *ElasticSearchBackendConfig `json:"elasticsearch,omitempty"`
+	OpenSearch    *OpenSearchBackendConfig    `json:"opensearch,omitempty"`
+	Kubernetes    *KubernetesSearchBackend    `json:"kubernetes,omitempty"`
+	Files         []FileSearchBackendConfig   `json:"file,omitempty" yaml:"file,omitempty"`
+}
+
 type SearchBackend struct {
 	Backend       SearchAPI                   `json:"-"`
 	ElasticSearch *ElasticSearchBackendConfig `json:"elasticsearch,omitempty"`
@@ -39,10 +47,21 @@ func (t Routes) MatchRoute(q *SearchParams) (match bool, isAdditive bool) {
 	return false, false
 }
 
+// +kubebuilder:object:generate=true
 type CommonBackend struct {
 	Routes Routes `json:"routes,omitempty"`
 }
 
+func (b SearchBackendCRD) ToSearchBackend() SearchBackend {
+	return SearchBackend{
+		Kubernetes:    b.Kubernetes,
+		Files:         b.Files,
+		ElasticSearch: b.ElasticSearch,
+		OpenSearch:    b.OpenSearch,
+	}
+}
+
+// +kubebuilder:object:generate=true
 type SearchRoute struct {
 	Type       string            `yaml:"type,omitempty"`
 	IdPrefix   string            `yaml:"idPrefix,omitempty"`
@@ -74,6 +93,7 @@ func (t *SearchRoute) Match(q *SearchParams) bool {
 	return true
 }
 
+// +kubebuilder:object:generate=true
 type KubernetesSearchBackend struct {
 	CommonBackend `json:",inline" yaml:",inline"`
 	// empty kubeconfig indicates to use the current kubeconfig for connection
@@ -82,12 +102,14 @@ type KubernetesSearchBackend struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
+// +kubebuilder:object:generate=true
 type FileSearchBackendConfig struct {
 	CommonBackend `json:",inline" yaml:",inline"`
 	Labels        map[string]string `yaml:"labels,omitempty"`
 	Paths         []string          `yaml:"path,omitempty"`
 }
 
+// +kubebuilder:object:generate=true
 // ElasticSearchFields defines the fields to use for the timestamp and message
 // and excluding certain fields from the message
 type ElasticSearchFields struct {
@@ -96,6 +118,7 @@ type ElasticSearchFields struct {
 	Exclusions []string `yaml:"exclusions,omitempty"` // Exclusions are the fields that'll be extracted from the labels
 }
 
+// +kubebuilder:object:generate=true
 type ElasticSearchBackendConfig struct {
 	CommonBackend `json:",inline" yaml:",inline"`
 	Address       string              `yaml:"address,omitempty"`
@@ -110,6 +133,7 @@ type ElasticSearchBackendConfig struct {
 	Password *kommons.EnvVar `yaml:"password,omitempty"`
 }
 
+// +kubebuilder:object:generate=true
 type OpenSearchBackendConfig struct {
 	CommonBackend `json:",inline" yaml:",inline"`
 	Address       string              `yaml:"address,omitempty"`
@@ -120,6 +144,12 @@ type OpenSearchBackendConfig struct {
 
 	Username *kommons.EnvVar `yaml:"username,omitempty"`
 	Password *kommons.EnvVar `yaml:"password,omitempty"`
+}
+
+// +kubebuilder:object:generate=true
+type FileSearchBackend struct {
+	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Paths  []string          `json:"path,omitempty" yaml:"path,omitempty"`
 }
 
 type SearchParams struct {
@@ -274,6 +304,7 @@ func (r Result) Process() Result {
 	return r
 }
 
+// +kubebuilder:object:generate=false
 type SearchAPI interface {
 	Search(q *SearchParams) (r SearchResults, err error)
 	MatchRoute(q *SearchParams) (match bool, isAdditive bool)

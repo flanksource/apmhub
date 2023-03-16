@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	logsAPI "github.com/flanksource/apm-hub/api/logs"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -25,12 +26,7 @@ import (
 
 // APMHubConfigSpec defines the desired state of APMHubConfig
 type APMHubConfigSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of APMHubConfig. Edit apmhubconfig_types.go to remove/update
-	Foo      string   `json:"foo,omitempty"`
-	Backends []string `json:"backends,omitempty"`
+	Backends []logsAPI.SearchBackendCRD `json:"backends,omitempty"`
 }
 
 // APMHubConfigStatus defines the observed state of APMHubConfig

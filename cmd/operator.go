@@ -66,17 +66,17 @@ func run(cmd *cobra.Command, args []string) {
 		MetricsBindAddress: fmt.Sprintf("0.0.0.0:%d", metricsPort),
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "ca62cd4d.flanksource.com",
+		LeaderElectionID:   "1df594fc.flanksource.com",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	if err = (&controllers.ScrapeConfigReconciler{
+	if err = (&controllers.APMHubConfigReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-		Log:    ctrl.Log.WithName("controllers").WithName("scrape_config"),
+		Log:    ctrl.Log.WithName("controllers").WithName("apmhub_config"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scraper")
 		os.Exit(1)

@@ -14,9 +14,11 @@ var Root = &cobra.Command{
 }
 
 var httpPort int
+var metricsPort int
 
 func ServerFlags(flags *pflag.FlagSet) {
-	flags.IntVar(&httpPort, "httpPort", 8080, "Port to expose a health dashboard ")
+	flags.IntVar(&httpPort, "httpPort", 8080, "Port to expose the http server")
+	flags.IntVar(&metricsPort, "metricsPort", 8081, "Port to expose a health dashboard")
 }
 
 func init() {

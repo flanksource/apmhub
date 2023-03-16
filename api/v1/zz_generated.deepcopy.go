@@ -22,6 +22,7 @@ limitations under the License.
 package v1
 
 import (
+	"github.com/flanksource/apm-hub/api/logs"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -89,8 +90,10 @@ func (in *APMHubConfigSpec) DeepCopyInto(out *APMHubConfigSpec) {
 	*out = *in
 	if in.Backends != nil {
 		in, out := &in.Backends, &out.Backends
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+		*out = make([]logs.SearchBackendCRD, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 }
 
