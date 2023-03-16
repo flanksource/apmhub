@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/flanksource/apm-hub/api"
+	"github.com/flanksource/apm-hub/api/logs"
+	"github.com/flanksource/apm-hub/pkg"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/flanksource-ui/apm-hub/api"
-	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
-	"github.com/flanksource/flanksource-ui/apm-hub/pkg"
 	"github.com/flanksource/kommons"
 	"github.com/spf13/cobra"
 

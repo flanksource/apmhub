@@ -3,10 +3,10 @@ package elasticsearch
 import (
 	"fmt"
 
+	"github.com/flanksource/apm-hub/api/logs"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/utils"
-	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
 	"github.com/jeremywohl/flatten"
 )
 

@@ -12,7 +12,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
+	"github.com/flanksource/apm-hub/api/logs"
 	"github.com/flanksource/kommons"
 )
 

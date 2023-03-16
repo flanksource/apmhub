@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/flanksource/flanksource-ui/apm-hub/cmd"
+	"github.com/flanksource/apm-hub/cmd"
 	"github.com/spf13/cobra"
 )
 

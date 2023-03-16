@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/flanksource/apm-hub/api/logs"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
 	v1 "k8s.io/api/core/v1"
 )
 

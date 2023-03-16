@@ -8,8 +8,8 @@ import (
 	"text/template"
 
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
-	pkgElasticsearch "github.com/flanksource/flanksource-ui/apm-hub/external/elasticsearch"
+	"github.com/flanksource/apm-hub/api/logs"
+	pkgElasticsearch "github.com/flanksource/apm-hub/external/elasticsearch"
 )
 
 type ElasticSearchBackend struct {

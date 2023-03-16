@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/apm-hub/api/logs"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
 )
 
 type FileSearch struct {

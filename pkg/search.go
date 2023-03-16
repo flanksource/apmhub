@@ -6,8 +6,8 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/timer"
 
-	"github.com/flanksource/flanksource-ui/apm-hub/api"
-	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
+	"github.com/flanksource/apm-hub/api"
+	"github.com/flanksource/apm-hub/api/logs"
 	"github.com/labstack/echo/v4"
 )
 

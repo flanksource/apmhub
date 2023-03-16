@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
-	"github.com/flanksource/flanksource-ui/apm-hub/cmd"
-	"github.com/flanksource/flanksource-ui/apm-hub/pkg"
-	"github.com/flanksource/flanksource-ui/apm-hub/pkg/files"
+	"github.com/flanksource/apm-hub/api/logs"
+	"github.com/flanksource/apm-hub/cmd"
+	"github.com/flanksource/apm-hub/pkg"
+	"github.com/flanksource/apm-hub/pkg/files"
 )
 
 func TestFileSearch(t *testing.T) {

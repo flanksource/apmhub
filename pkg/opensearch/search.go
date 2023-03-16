@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"text/template"
 
+	"github.com/flanksource/apm-hub/api/logs"
+	"github.com/flanksource/apm-hub/external/elasticsearch"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/flanksource-ui/apm-hub/api/logs"
-	"github.com/flanksource/flanksource-ui/apm-hub/external/elasticsearch"
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 )
 

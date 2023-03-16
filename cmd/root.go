@@ -21,5 +21,5 @@ func ServerFlags(flags *pflag.FlagSet) {
 
 func init() {
 	logger.BindFlags(Root.PersistentFlags())
-	Root.AddCommand(Serve)
+	Root.AddCommand(Serve, Operator)
 }
