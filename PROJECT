@@ -9,7 +9,7 @@ resources:
     namespaced: true
   controller: true
   domain: flanksource.com
-  group: apmhub
+  group: apm-hub
   kind: APMHubConfig
   path: github.com/flanksource/apm-hub/api/v1
   version: v1
