@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/apm-hub/pkg/files"
 	k8s "github.com/flanksource/apm-hub/pkg/kubernetes"
 	pkgOpensearch "github.com/flanksource/apm-hub/pkg/opensearch"
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/opensearch-project/opensearch-go/v2"
 	"gopkg.in/yaml.v3"
@@ -38,93 +39,10 @@ func ParseConfig(configFile string) (*logs.SearchConfig, error) {
 func LoadBackendsFromConfig(client *kommons.Client, searchConfig *logs.SearchConfig) ([]logs.SearchBackend, error) {
 	var backends []logs.SearchBackend
 	for _, backend := range searchConfig.Backends {
-		if backend.Kubernetes != nil {
-			client, err := k8s.GetKubeClient(client, backend.Kubernetes)
-			if err != nil {
-				return nil, fmt.Errorf("error getting the kube client: %w", err)
-			}
-
-			backend.Backend = &k8s.KubernetesSearch{
-				Client: client,
-				Routes: backend.Kubernetes.Routes,
-			}
-			backends = append(backends, backend)
+		if err := AttachSearchAPIToBackend(&backend); err != nil {
+			logger.Errorf("Error attaching search api backend: %v", err)
 		}
 
-		if len(backend.Files) != 0 {
-			// If the paths are not absolute,
-			// They should be parsed with respect to the provided config file
-			for i, f := range backend.Files {
-				for j, p := range f.Paths {
-					if !filepath.IsAbs(p) {
-						backend.Files[i].Paths[j] = filepath.Join(filepath.Dir(searchConfig.Path), p)
-					}
-				}
-			}
-
-			backend.Backend = &files.FileSearch{
-				FilesBackendConfig: backend.Files,
-			}
-			backends = append(backends, backend)
-		}
-
-		if backend.ElasticSearch != nil {
-			cfg, err := getElasticConfig(client, backend.ElasticSearch)
-			if err != nil {
-				return nil, fmt.Errorf("error getting the elastic search config: %w", err)
-			}
-
-			client, err := v8.NewClient(*cfg)
-			if err != nil {
-				return nil, fmt.Errorf("error creating the elastic search client: %w", err)
-			}
-
-			pingResp, err := client.Ping()
-			if err != nil {
-				return nil, fmt.Errorf("error pinging the elastic search client: %w", err)
-			}
-
-			if pingResp.StatusCode != 200 {
-				return nil, fmt.Errorf("[elasticsearch] got ping response: %d", pingResp.StatusCode)
-			}
-
-			es, err := elasticsearch.NewElasticSearchBackend(client, backend.ElasticSearch)
-			if err != nil {
-				return nil, fmt.Errorf("error creating the elastic search backend: %w", err)
-			}
-			backend.Backend = es
-
-			backends = append(backends, backend)
-		}
-
-		if backend.OpenSearch != nil {
-			cfg, err := getOpenSearchConfig(client, backend.OpenSearch)
-			if err != nil {
-				return nil, fmt.Errorf("error getting the openSearch config: %w", err)
-			}
-
-			client, err := opensearch.NewClient(*cfg)
-			if err != nil {
-				return nil, fmt.Errorf("error creating the openSearch client: %w", err)
-			}
-
-			pingResp, err := client.Ping()
-			if err != nil {
-				return nil, fmt.Errorf("error pinging the openSearch client: %w", err)
-			}
-
-			if pingResp.StatusCode != 200 {
-				return nil, fmt.Errorf("[opensearch] got ping response: %d", pingResp.StatusCode)
-			}
-
-			es, err := pkgOpensearch.NewOpenSearchBackend(client, backend.OpenSearch)
-			if err != nil {
-				return nil, fmt.Errorf("error creating the openSearch backend: %w", err)
-			}
-			backend.Backend = es
-
-			backends = append(backends, backend)
-		}
 	}
 
 	return backends, nil
@@ -230,4 +148,98 @@ func getOpenSearchConfig(kClient *kommons.Client, conf *logs.OpenSearchBackendCo
 	}
 
 	return &cfg, nil
+}
+
+func AttachSearchAPIToBackend(backend *logs.SearchBackend) error {
+	kommonsClient, err := kommons.NewClientFromDefaults(logger.GetZapLogger())
+	if err != nil {
+		return err
+	}
+
+	if backend.Kubernetes != nil {
+		client, err := k8s.GetKubeClient(kommonsClient, backend.Kubernetes)
+		if err != nil {
+			return err
+		}
+		backend.API = &k8s.KubernetesSearch{
+			Client: client,
+		}
+	}
+
+	if len(backend.Files) > 0 {
+		// If the paths are not absolute,
+		// They should be parsed with respect to the current path
+		for i, f := range backend.Files {
+			for j, p := range f.Paths {
+				if !filepath.IsAbs(p) {
+					currentPath, _ := os.Getwd()
+					backend.Files[i].Paths[j] = filepath.Join(currentPath, p)
+				}
+			}
+		}
+
+		backend.API = &files.FileSearch{
+			FilesBackend: backend.Files,
+		}
+	}
+
+	if backend.ElasticSearch != nil {
+		cfg, err := getElasticConfig(client, backend.ElasticSearch)
+		if err != nil {
+			return nil, fmt.Errorf("error getting the elastic search config: %w", err)
+		}
+
+		client, err := v8.NewClient(*cfg)
+		if err != nil {
+			return nil, fmt.Errorf("error creating the elastic search client: %w", err)
+		}
+
+		pingResp, err := client.Ping()
+		if err != nil {
+			return nil, fmt.Errorf("error pinging the elastic search client: %w", err)
+		}
+
+		if pingResp.StatusCode != 200 {
+			return nil, fmt.Errorf("[elasticsearch] got ping response: %d", pingResp.StatusCode)
+		}
+
+		es, err := elasticsearch.NewElasticSearchBackend(client, backend.ElasticSearch)
+		if err != nil {
+			return nil, fmt.Errorf("error creating the elastic search backend: %w", err)
+		}
+		backend.Backend = es
+
+		backends = append(backends, backend)
+	}
+
+	if backend.OpenSearch != nil {
+		cfg, err := getOpenSearchConfig(client, backend.OpenSearch)
+		if err != nil {
+			return nil, fmt.Errorf("error getting the openSearch config: %w", err)
+		}
+
+		client, err := opensearch.NewClient(*cfg)
+		if err != nil {
+			return nil, fmt.Errorf("error creating the openSearch client: %w", err)
+		}
+
+		pingResp, err := client.Ping()
+		if err != nil {
+			return nil, fmt.Errorf("error pinging the openSearch client: %w", err)
+		}
+
+		if pingResp.StatusCode != 200 {
+			return nil, fmt.Errorf("[opensearch] got ping response: %d", pingResp.StatusCode)
+		}
+
+		es, err := pkgOpensearch.NewOpenSearchBackend(client, backend.OpenSearch)
+		if err != nil {
+			return nil, fmt.Errorf("error creating the openSearch backend: %w", err)
+		}
+		backend.Backend = es
+
+		backends = append(backends, backend)
+	}
+
+	return nil
 }
