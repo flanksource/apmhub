@@ -32,26 +32,26 @@ import (
 	"github.com/go-logr/logr"
 )
 
-// APMHubConfigReconciler reconciles a APMHubConfig object
-type APMHubConfigReconciler struct {
+// LoggingBackendReconciler reconciles a LoggingBackend object
+type LoggingBackendReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	Log    logr.Logger
 }
 
-const APMHUBConfigFinalizerName = "config.apm-hub.flanksource.com"
+const LoggingBackendFinalizerName = "loggingbackend.apm-hub.flanksource.com"
 
-// +kubebuilder:rbac:groups=apm-hub.flanksource.com,resources=apmhubconfigs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apm-hub.flanksource.com,resources=apmhubconfigs/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=apm-hub.flanksource.com,resources=apmhubconfigs/finalizers,verbs=update
-func (r *APMHubConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+// +kubebuilder:rbac:groups=apm-hub.flanksource.com,resources=loggingbackends,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apm-hub.flanksource.com,resources=loggingbackends/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apm-hub.flanksource.com,resources=loggingbackends/finalizers,verbs=update
+func (r *LoggingBackendReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("apmhub_config", req.NamespacedName)
 
-	config := &apmhubv1.APMHubConfig{}
+	config := &apmhubv1.LoggingBackend{}
 	err := r.Get(ctx, req.NamespacedName, config)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			logger.Error(err, "APMHUBConfig not found")
+			logger.Error(err, "LoggingBackend not found")
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
@@ -61,14 +61,14 @@ func (r *APMHubConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	if !config.DeletionTimestamp.IsZero() {
 		logger.Info("Deleting config", "id", config.GetUID())
 		removeBackendFromGlobalBackends(config.Spec.Backends)
-		controllerutil.RemoveFinalizer(config, APMHUBConfigFinalizerName)
+		controllerutil.RemoveFinalizer(config, LoggingBackendFinalizerName)
 		return ctrl.Result{}, r.Update(ctx, config)
 	}
 
 	// Add finalizer
-	if !controllerutil.ContainsFinalizer(config, APMHUBConfigFinalizerName) {
+	if !controllerutil.ContainsFinalizer(config, LoggingBackendFinalizerName) {
 		logger.Info("adding finalizer", "finalizers", config.GetFinalizers())
-		controllerutil.AddFinalizer(config, APMHUBConfigFinalizerName)
+		controllerutil.AddFinalizer(config, LoggingBackendFinalizerName)
 		if err := r.Update(ctx, config); err != nil {
 			logger.Error(err, "failed to update finalizers")
 		}
@@ -99,8 +99,8 @@ func removeBackendFromGlobalBackends(backends []logsAPI.SearchBackendCRD) {
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *APMHubConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *LoggingBackendReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&apmhubv1.APMHubConfig{}).
+		For(&apmhubv1.LoggingBackend{}).
 		Complete(r)
 }

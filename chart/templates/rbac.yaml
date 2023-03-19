@@ -40,7 +40,7 @@ rules:
   - apiGroups:
     - apmhub.flanksource.com
     resources:
-    - apmhubconfigs
+    - loggingbackends
     verbs:
     - create
     - delete
@@ -52,7 +52,7 @@ rules:
   - apiGroups:
     - apmhub.flanksource.com
     resources:
-    - apmhubconfigs/status
+    - loggingbackends/status
     verbs:
     - get
 ---

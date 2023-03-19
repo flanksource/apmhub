@@ -24,13 +24,13 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// APMHubConfigSpec defines the desired state of APMHubConfig
-type APMHubConfigSpec struct {
+// LoggingBackendSpec defines the desired state of LoggingBackend
+type LoggingBackendSpec struct {
 	Backends []logsAPI.SearchBackendCRD `json:"backends,omitempty"`
 }
 
-// APMHubConfigStatus defines the observed state of APMHubConfig
-type APMHubConfigStatus struct {
+// LoggingBackendStatus defines the observed state of LoggingBackend
+type LoggingBackendStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -38,24 +38,24 @@ type APMHubConfigStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// APMHubConfig is the Schema for the apmhubconfigs API
-type APMHubConfig struct {
+// LoggingBackend is the Schema for the loggingbackend API
+type LoggingBackend struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   APMHubConfigSpec   `json:"spec,omitempty"`
-	Status APMHubConfigStatus `json:"status,omitempty"`
+	Spec   LoggingBackendSpec   `json:"spec,omitempty"`
+	Status LoggingBackendStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// APMHubConfigList contains a list of APMHubConfig
-type APMHubConfigList struct {
+// LoggingBackendList contains a list of LoggingBackend
+type LoggingBackendList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []APMHubConfig `json:"items"`
+	Items           []LoggingBackend `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&APMHubConfig{}, &APMHubConfigList{})
+	SchemeBuilder.Register(&LoggingBackend{}, &LoggingBackendList{})
 }

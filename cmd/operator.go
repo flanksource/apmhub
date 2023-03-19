@@ -73,7 +73,7 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.APMHubConfigReconciler{
+	if err = (&controllers.LoggingBackendReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 		Log:    ctrl.Log.WithName("controllers").WithName("apmhub_config"),

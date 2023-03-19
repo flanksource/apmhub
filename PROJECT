@@ -10,7 +10,7 @@ resources:
   controller: true
   domain: flanksource.com
   group: apm-hub
-  kind: APMHubConfig
+  kind: LoggingBackend
   path: github.com/flanksource/apm-hub/api/v1
   version: v1
 version: "3"
