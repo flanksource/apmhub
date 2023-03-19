@@ -24,13 +24,13 @@ func Search(c echo.Context) error {
 	timer := timer.NewTimer()
 	results := &logs.SearchResults{}
 	for i, backend := range logs.GlobalBackends {
-		matched, isAdditive := backend.Backend.MatchRoute(searchParams)
+		matched, isAdditive := backend.API.MatchRoute(searchParams)
 		if !matched {
 			logger.Debugf("backend[%d] did not match any routes", i)
 			continue
 		}
 
-		searchResult, err := backend.Backend.Search(searchParams)
+		searchResult, err := backend.API.Search(searchParams)
 		if err != nil {
 			logger.Errorf("error searching backend[%d]: %v", i, err)
 			continue

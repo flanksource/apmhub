@@ -6,6 +6,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.6.0
 	github.com/flanksource/commons v1.6.4
 	github.com/flanksource/kommons v0.31.1
+	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/labstack/echo/v4 v4.6.3
@@ -74,7 +75,6 @@ require (
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-git/go-git/v5 v5.4.2 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect

@@ -157,12 +157,12 @@ func AttachSearchAPIToBackend(backend *logs.SearchBackend) error {
 	}
 
 	if backend.Kubernetes != nil {
-		client, err := k8s.GetKubeClient(kommonsClient, backend.Kubernetes)
+		k8sclient, err := k8s.GetKubeClient(kommonsClient, backend.Kubernetes)
 		if err != nil {
 			return err
 		}
 		backend.API = &k8s.KubernetesSearch{
-			Client: client,
+			Client: k8sclient,
 		}
 	}
 
@@ -179,66 +179,62 @@ func AttachSearchAPIToBackend(backend *logs.SearchBackend) error {
 		}
 
 		backend.API = &files.FileSearch{
-			FilesBackend: backend.Files,
+			FilesBackendConfig: backend.Files,
 		}
 	}
 
 	if backend.ElasticSearch != nil {
-		cfg, err := getElasticConfig(client, backend.ElasticSearch)
+		cfg, err := getElasticConfig(kommonsClient, backend.ElasticSearch)
 		if err != nil {
-			return nil, fmt.Errorf("error getting the elastic search config: %w", err)
+			return fmt.Errorf("error getting the elastic search config: %w", err)
 		}
 
-		client, err := v8.NewClient(*cfg)
+		esClient, err := v8.NewClient(*cfg)
 		if err != nil {
-			return nil, fmt.Errorf("error creating the elastic search client: %w", err)
+			return fmt.Errorf("error creating the elastic search client: %w", err)
 		}
 
-		pingResp, err := client.Ping()
+		pingResp, err := esClient.Ping()
 		if err != nil {
-			return nil, fmt.Errorf("error pinging the elastic search client: %w", err)
+			return fmt.Errorf("error pinging the elastic search client: %w", err)
 		}
 
 		if pingResp.StatusCode != 200 {
-			return nil, fmt.Errorf("[elasticsearch] got ping response: %d", pingResp.StatusCode)
+			return fmt.Errorf("[elasticsearch] got ping response: %d", pingResp.StatusCode)
 		}
 
-		es, err := elasticsearch.NewElasticSearchBackend(client, backend.ElasticSearch)
+		es, err := elasticsearch.NewElasticSearchBackend(esClient, backend.ElasticSearch)
 		if err != nil {
-			return nil, fmt.Errorf("error creating the elastic search backend: %w", err)
+			return fmt.Errorf("error creating the elastic search backend: %w", err)
 		}
-		backend.Backend = es
-
-		backends = append(backends, backend)
+		backend.API = es
 	}
 
 	if backend.OpenSearch != nil {
-		cfg, err := getOpenSearchConfig(client, backend.OpenSearch)
+		cfg, err := getOpenSearchConfig(kommonsClient, backend.OpenSearch)
 		if err != nil {
-			return nil, fmt.Errorf("error getting the openSearch config: %w", err)
+			return fmt.Errorf("error getting the openSearch config: %w", err)
 		}
 
-		client, err := opensearch.NewClient(*cfg)
+		osClient, err := opensearch.NewClient(*cfg)
 		if err != nil {
-			return nil, fmt.Errorf("error creating the openSearch client: %w", err)
+			return fmt.Errorf("error creating the openSearch client: %w", err)
 		}
 
-		pingResp, err := client.Ping()
+		pingResp, err := osClient.Ping()
 		if err != nil {
-			return nil, fmt.Errorf("error pinging the openSearch client: %w", err)
+			return fmt.Errorf("error pinging the openSearch client: %w", err)
 		}
 
 		if pingResp.StatusCode != 200 {
-			return nil, fmt.Errorf("[opensearch] got ping response: %d", pingResp.StatusCode)
+			return fmt.Errorf("[opensearch] got ping response: %d", pingResp.StatusCode)
 		}
 
-		es, err := pkgOpensearch.NewOpenSearchBackend(client, backend.OpenSearch)
+		osBackend, err := pkgOpensearch.NewOpenSearchBackend(osClient, backend.OpenSearch)
 		if err != nil {
-			return nil, fmt.Errorf("error creating the openSearch backend: %w", err)
+			return fmt.Errorf("error creating the openSearch backend: %w", err)
 		}
-		backend.Backend = es
-
-		backends = append(backends, backend)
+		backend.API = osBackend
 	}
 
 	return nil

@@ -28,7 +28,7 @@ type SearchBackendCRD struct {
 }
 
 type SearchBackend struct {
-	Backend       SearchAPI                   `json:"-"`
+	API           SearchAPI                   `json:"-"`
 	ElasticSearch *ElasticSearchBackendConfig `json:"elasticsearch,omitempty"`
 	OpenSearch    *OpenSearchBackendConfig    `json:"opensearch,omitempty"`
 	Kubernetes    *KubernetesSearchBackend    `json:"kubernetes,omitempty"`
@@ -63,10 +63,10 @@ func (b SearchBackendCRD) ToSearchBackend() SearchBackend {
 
 // +kubebuilder:object:generate=true
 type SearchRoute struct {
-	Type       string            `yaml:"type,omitempty"`
-	IdPrefix   string            `yaml:"idPrefix,omitempty"`
-	Labels     map[string]string `yaml:"labels,omitempty"`
-	IsAdditive bool              `yaml:"additive,omitempty"`
+	Type       string            `yaml:"type,omitempty" json:"type,omitempty"`
+	IdPrefix   string            `yaml:"idPrefix,omitempty" json:"id_prefix,omitempty"`
+	Labels     map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
+	IsAdditive bool              `yaml:"additive,omitempty" json:"is_additive,omitempty"`
 }
 
 func (t *SearchRoute) Match(q *SearchParams) bool {
@@ -105,45 +105,45 @@ type KubernetesSearchBackend struct {
 // +kubebuilder:object:generate=true
 type FileSearchBackendConfig struct {
 	CommonBackend `json:",inline" yaml:",inline"`
-	Labels        map[string]string `yaml:"labels,omitempty"`
-	Paths         []string          `yaml:"path,omitempty"`
+	Labels        map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
+	Paths         []string          `yaml:"path,omitempty" json:"paths,omitempty"`
 }
 
 // +kubebuilder:object:generate=true
 // ElasticSearchFields defines the fields to use for the timestamp and message
 // and excluding certain fields from the message
 type ElasticSearchFields struct {
-	Timestamp  string   `yaml:"timestamp,omitempty"`  // Timestamp is the field used to extract the timestamp
-	Message    string   `yaml:"message,omitempty"`    // Message is the field used to extract the message
-	Exclusions []string `yaml:"exclusions,omitempty"` // Exclusions are the fields that'll be extracted from the labels
+	Timestamp  string   `yaml:"timestamp,omitempty" json:"timestamp,omitempty"`   // Timestamp is the field used to extract the timestamp
+	Message    string   `yaml:"message,omitempty" json:"message,omitempty"`       // Message is the field used to extract the message
+	Exclusions []string `yaml:"exclusions,omitempty" json:"exclusions,omitempty"` // Exclusions are the fields that'll be extracted from the labels
 }
 
 // +kubebuilder:object:generate=true
 type ElasticSearchBackendConfig struct {
 	CommonBackend `json:",inline" yaml:",inline"`
-	Address       string              `yaml:"address,omitempty"`
-	Query         string              `yaml:"query,omitempty"`
-	Index         string              `yaml:"index,omitempty"`
+	Address       string              `yaml:"address,omitempty" json:"address,omitempty"`
+	Query         string              `yaml:"query,omitempty" json:"query,omitempty"`
+	Index         string              `yaml:"index,omitempty" json:"index,omitempty"`
 	Namespace     string              `json:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
-	Fields        ElasticSearchFields `yaml:"fields,omitempty"`
+	Fields        ElasticSearchFields `yaml:"fields,omitempty" json:"fields,omitempty"`
 
-	CloudID  *kommons.EnvVar `yaml:"cloudID,omitempty"`
-	APIKey   *kommons.EnvVar `yaml:"apiKey,omitempty"`
-	Username *kommons.EnvVar `yaml:"username,omitempty"`
-	Password *kommons.EnvVar `yaml:"password,omitempty"`
+	CloudID  *kommons.EnvVar `yaml:"cloudID,omitempty" json:"cloud_id,omitempty"`
+	APIKey   *kommons.EnvVar `yaml:"apiKey,omitempty" json:"api_key,omitempty"`
+	Username *kommons.EnvVar `yaml:"username,omitempty" json:"username,omitempty"`
+	Password *kommons.EnvVar `yaml:"password,omitempty" json:"password,omitempty"`
 }
 
 // +kubebuilder:object:generate=true
 type OpenSearchBackendConfig struct {
 	CommonBackend `json:",inline" yaml:",inline"`
-	Address       string              `yaml:"address,omitempty"`
-	Query         string              `yaml:"query,omitempty"`
-	Index         string              `yaml:"index,omitempty"`
-	Namespace     string              `yaml:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
-	Fields        ElasticSearchFields `yaml:"fields,omitempty"`
+	Address       string              `yaml:"address,omitempty" json:"address,omitempty"`
+	Query         string              `yaml:"query,omitempty" json:"query,omitempty"`
+	Index         string              `yaml:"index,omitempty" json:"index,omitempty"`
+	Namespace     string              `yaml:"namespace,omitempty" json:"namespace,omitempty"` // Namespace to search the kommons.EnvVar in
+	Fields        ElasticSearchFields `yaml:"fields,omitempty" json:"fields,omitempty"`
 
-	Username *kommons.EnvVar `yaml:"username,omitempty"`
-	Password *kommons.EnvVar `yaml:"password,omitempty"`
+	Username *kommons.EnvVar `yaml:"username,omitempty" json:"username,omitempty"`
+	Password *kommons.EnvVar `yaml:"password,omitempty" json:"password,omitempty"`
 }
 
 // +kubebuilder:object:generate=true
