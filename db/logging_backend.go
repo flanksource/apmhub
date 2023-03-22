@@ -72,9 +72,9 @@ func GetLoggingBackends() ([]logs.SearchBackend, error) {
 	return backends, nil
 }
 
-func DeleteOldConfigFileBackends() (int64, error) {
-	tx := gormDB.Debug().Table("logging_backends").
+func DeleteOldConfigFileBackends() error {
+	return gormDB.Table("logging_backends").
 		Where("source = ?", "ConfigFile").
-		UpdateColumn("deleted_at", time.Now())
-	return tx.RowsAffected, tx.Error
+		UpdateColumn("deleted_at", time.Now()).
+		Error
 }
