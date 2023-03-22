@@ -15,12 +15,12 @@ var GlobalBackends []SearchBackend
 
 type SearchConfig struct {
 	// Path is the path of this config file
-	Path     string          `yaml:"-"`
-	Backends []SearchBackend `yaml:"backends,omitempty"`
+	Path     string               `yaml:"-"`
+	Backends SearchBackendConfigs `yaml:"backends,omitempty"`
 }
 
 // +kubebuilder:object:generate=true
-type SearchBackendCRD struct {
+type SearchBackendConfig struct {
 	ElasticSearch *ElasticSearchBackendConfig `json:"elasticsearch,omitempty"`
 	OpenSearch    *OpenSearchBackendConfig    `json:"opensearch,omitempty"`
 	Kubernetes    *KubernetesSearchBackend    `json:"kubernetes,omitempty"`
@@ -28,6 +28,7 @@ type SearchBackendCRD struct {
 }
 
 type SearchBackend struct {
+	Name          string                      `json:"name"`
 	API           SearchAPI                   `json:"-"`
 	ElasticSearch *ElasticSearchBackendConfig `json:"elasticsearch,omitempty"`
 	OpenSearch    *OpenSearchBackendConfig    `json:"opensearch,omitempty"`
@@ -52,13 +53,23 @@ type CommonBackend struct {
 	Routes Routes `json:"routes,omitempty"`
 }
 
-func (b SearchBackendCRD) ToSearchBackend() SearchBackend {
+func (b SearchBackendConfig) ToSearchBackend() SearchBackend {
 	return SearchBackend{
 		Kubernetes:    b.Kubernetes,
 		Files:         b.Files,
 		ElasticSearch: b.ElasticSearch,
 		OpenSearch:    b.OpenSearch,
 	}
+}
+
+type SearchBackendConfigs []SearchBackendConfig
+
+func (bs SearchBackendConfigs) ToSearchBackends() []SearchBackend {
+	var backends []SearchBackend
+	for _, b := range bs {
+		backends = append(backends, b.ToSearchBackend())
+	}
+	return backends
 }
 
 // +kubebuilder:object:generate=true
@@ -106,7 +117,7 @@ type KubernetesSearchBackend struct {
 type FileSearchBackendConfig struct {
 	CommonBackend `json:",inline" yaml:",inline"`
 	Labels        map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
-	Paths         []string          `yaml:"path,omitempty" json:"paths,omitempty"`
+	Paths         []string          `yaml:"path,omitempty" json:"path,omitempty"`
 }
 
 // +kubebuilder:object:generate=true

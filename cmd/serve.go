@@ -6,6 +6,7 @@ import (
 
 	"github.com/flanksource/apm-hub/api"
 	"github.com/flanksource/apm-hub/api/logs"
+	"github.com/flanksource/apm-hub/db"
 	"github.com/flanksource/apm-hub/pkg"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
@@ -26,6 +27,7 @@ func runServe(cmd *cobra.Command, configFiles []string) {
 		logger.Warnf("error getting the client from default k8s cluster: %v", err)
 	}
 
+	db.DeleteOldConfigFileBackends()
 	if len(configFiles) != 0 {
 		for _, configFile := range configFiles {
 			logger.Debugf("parsing config file: %s", configFile)
@@ -35,16 +37,16 @@ func runServe(cmd *cobra.Command, configFiles []string) {
 				continue
 			}
 
-			logger.Debugf("loading backends from config file: %s", configFile)
-			backends, err := pkg.LoadBackendsFromConfig(kommonsClient, config)
+			err = db.PersistLoggingBackendConfigFile(*config)
 			if err != nil {
-				logger.Errorf("error loading backends from the configFile: %v", err)
+				logger.Errorf("error persisting backend to file: %v", err)
 				continue
 			}
-
-			logger.Debugf("loaded %d backends from %s", len(backends), configFile)
-			logs.GlobalBackends = append(logs.GlobalBackends, backends...)
 		}
+	}
+	err = pkg.LoadGlobalBackends()
+	if err != nil {
+		logger.Fatalf("error loading backends: %v", err)
 	}
 	logger.Infof("loaded %d backends in total", len(logs.GlobalBackends))
 

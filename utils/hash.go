@@ -4,6 +4,8 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+
+	"github.com/google/uuid"
 )
 
 func Hash(v any) (string, error) {
@@ -17,4 +19,16 @@ func Hash(v any) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(hash[:]), nil
+}
+
+func DeterministicUUID(seed any) (uuid.UUID, error) {
+	byteHash, err := Hash(seed)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	id, err := uuid.FromBytes([]byte(byteHash[0:16]))
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return id, nil
 }

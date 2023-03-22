@@ -26,7 +26,7 @@ import (
 
 // LoggingBackendSpec defines the desired state of LoggingBackend
 type LoggingBackendSpec struct {
-	Backends []logsAPI.SearchBackendCRD `json:"backends,omitempty"`
+	Backends logsAPI.SearchBackendConfigs `json:"backends,omitempty"`
 }
 
 // LoggingBackendStatus defines the observed state of LoggingBackend

@@ -90,7 +90,7 @@ func (in *LoggingBackendSpec) DeepCopyInto(out *LoggingBackendSpec) {
 	*out = *in
 	if in.Backends != nil {
 		in, out := &in.Backends, &out.Backends
-		*out = make([]logs.SearchBackendCRD, len(*in))
+		*out = make(logs.SearchBackendConfigs, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

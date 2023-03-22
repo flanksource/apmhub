@@ -18,8 +18,9 @@ package controllers
 
 import (
 	"context"
+	"time"
 
-	logsAPI "github.com/flanksource/apm-hub/api/logs"
+	"github.com/flanksource/apm-hub/db"
 	"github.com/flanksource/apm-hub/pkg"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -28,7 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	apmhubv1 "github.com/flanksource/apm-hub/api/v1"
-	"github.com/flanksource/apm-hub/utils"
 	"github.com/go-logr/logr"
 )
 
@@ -59,8 +59,15 @@ func (r *LoggingBackendReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	// Check if it is deleted, remove config
 	if !config.DeletionTimestamp.IsZero() {
-		logger.Info("Deleting config", "id", config.GetUID())
-		removeBackendFromGlobalBackends(config.Spec.Backends)
+		logger.Info("Deleting logging backend", "id", config.GetUID())
+		if err := db.DeleteLoggingBackend(string(config.GetUID())); err != nil {
+			logger.Error(err, "failed to delete logging backend")
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		}
+
+		if err := pkg.LoadGlobalBackends(); err != nil {
+			logger.Error(err, "failed to update global backends")
+		}
 		controllerutil.RemoveFinalizer(config, LoggingBackendFinalizerName)
 		return ctrl.Result{}, r.Update(ctx, config)
 	}
@@ -74,28 +81,19 @@ func (r *LoggingBackendReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		}
 	}
 
-	for _, b := range config.Spec.Backends {
-		sb := b.ToSearchBackend()
-		if err := pkg.AttachSearchAPIToBackend(&sb); err != nil {
-			logger.Error(err, "error adding search api to backend")
-			continue
-		}
-		logsAPI.GlobalBackends = append(logsAPI.GlobalBackends, sb)
+	err = db.PersistLoggingBackendCRD(*config)
+	if err != nil {
+		logger.Error(err, "failed to persist scrape config")
+		return ctrl.Result{}, err
 	}
-	return ctrl.Result{}, nil
-}
 
-func removeBackendFromGlobalBackends(backends []logsAPI.SearchBackendCRD) {
-	for i, gb := range logsAPI.GlobalBackends {
-		for _, b := range backends {
-			hashA, _ := utils.Hash(gb)
-			hashB, _ := utils.Hash(b)
-			if hashA == hashB {
-				logsAPI.GlobalBackends = append(logsAPI.GlobalBackends[:i], logsAPI.GlobalBackends[i+1:]...)
-				continue
-			}
-		}
+	err = pkg.LoadGlobalBackends()
+	if err != nil {
+		logger.Error(err, "failed to persist scrape config")
+		return ctrl.Result{}, err
 	}
+
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
