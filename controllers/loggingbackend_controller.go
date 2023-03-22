@@ -83,13 +83,13 @@ func (r *LoggingBackendReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	err = db.PersistLoggingBackendCRD(*config)
 	if err != nil {
-		logger.Error(err, "failed to persist scrape config")
+		logger.Error(err, "failed to persist logging backend")
 		return ctrl.Result{}, err
 	}
 
 	err = pkg.LoadGlobalBackends()
 	if err != nil {
-		logger.Error(err, "failed to persist scrape config")
+		logger.Error(err, "failed to persist logging backend")
 		return ctrl.Result{}, err
 	}
 

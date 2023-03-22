@@ -78,7 +78,7 @@ func run(cmd *cobra.Command, args []string) {
 		Scheme: mgr.GetScheme(),
 		Log:    ctrl.Log.WithName("controllers").WithName("apmhub_config"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Scraper")
+		setupLog.Error(err, "unable to create controller", "controller", "LoggingBackend")
 		os.Exit(1)
 	}
 
