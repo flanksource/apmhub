@@ -213,7 +213,7 @@ spec:
                             additionalProperties:
                               type: string
                             type: object
-                          paths:
+                          path:
                             items:
                               type: string
                             type: array

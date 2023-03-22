@@ -1,0 +1,8 @@
+apiVersion: apm-hub.flanksource.com/v1
+kind: LoggingBackend
+metadata:
+  name: k8s-backend
+spec:
+  backends:
+  - kubernetes:
+      kubeconfig:
