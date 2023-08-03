@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20220216202328-9eeeec9d044b
-	github.com/flanksource/apm-hub v0.0.35
+	github.com/flanksource/apm-hub v0.0.45
 	github.com/flanksource/commons v1.10.0
 	github.com/spf13/cobra v1.6.1
 )
