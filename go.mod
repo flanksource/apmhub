@@ -19,7 +19,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.6
 	github.com/opensearch-project/opensearch-go/v2 v2.2.0
-	github.com/spf13/cobra v1.6.0
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.25.0
@@ -118,7 +118,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.16.2 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/imdario/mergo v0.3.15 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/itchyny/gojq v0.12.12 // indirect
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
