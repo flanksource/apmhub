@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.18.23
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.22
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.11
-	github.com/elastic/go-elasticsearch/v8 v8.6.0
+	github.com/elastic/go-elasticsearch/v8 v8.10.0
 	github.com/flanksource/commons v1.10.0
 	github.com/flanksource/duty v1.0.121
 	github.com/flanksource/kommons v0.31.1
@@ -74,7 +74,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dustin/gojson v0.0.0-20160307161227-2e71ec9dd5ad // indirect
-	github.com/elastic/elastic-transport-go/v8 v8.0.0-20211216131617-bbee439d559c // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.0.0-20230329154755-1a3c63de0db6 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
