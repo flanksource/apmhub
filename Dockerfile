@@ -1,4 +1,4 @@
-FROM golang:1.20@sha256:bc5f0b5e43282627279fe5262ae275fecb3d2eae3b33977a7fd200c7a760d6f1 as builder
+FROM golang:1.22@sha256:ef61a20960397f4d44b0e729298bf02327ca94f1519239ddc6d91689615b1367 as builder
 WORKDIR /app
 ARG VERSION
 COPY go.mod /app/go.mod
